@@ -2,17 +2,22 @@ package com.ethan.cameradetection2.ui.home.page
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,36 +51,131 @@ fun HomePage() {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-            Box(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
-                Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
-                Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
-                    Text("WiFi Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
-                    Text("These cameras upload the recorded video to the Internet via Wi-Fi.", fontSize = 12.sp, color = White50, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
-                }
-                Box(modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 15.dp, bottom = 15.dp)
-                    .background(color = White, shape = RoundedCornerShape(8.dp))
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-                ) {
-                    Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-            }
 
-            Spacer(modifier = Modifier.height(15.dp).wrapContentHeight().padding(15.dp))
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
-                Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
-                    Text("Bluetooth Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
-                    Text("These cameras upload the recorded video to a nearby storage device via Bluetooth.", fontSize = 12.sp, color = White50, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalItemSpacing = 15.dp,
+                contentPadding = PaddingValues(bottom = 15.dp)
+            ) {
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
+                        Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
+                            Text("WiFi Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
+                            Text("These cameras upload the recorded video to the Internet via Wi-Fi.", fontSize = 12.sp, color = White50, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
+                        }
+                        Box(modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 15.dp, bottom = 15.dp)
+                            .background(color = White, shape = RoundedCornerShape(8.dp))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
-                Box(modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 15.dp, bottom = 15.dp)
-                    .background(color = White, shape = RoundedCornerShape(8.dp))
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-                ) {
-                    Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
+                        Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
+                            Text("Bluetooth Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
+                            Text("These cameras upload the recorded video to a nearby storage device via Bluetooth.", fontSize = 12.sp, color = White50, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
+                        }
+                        Box(modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 15.dp, bottom = 15.dp)
+                            .background(color = White, shape = RoundedCornerShape(8.dp))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp))) {
+                        Column(modifier = Modifier.padding(top = 20.dp, start = 15.dp)) {
+                            Text("Magnetic Field", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
+                            Spacer(modifier = Modifier.height(5.dp))
+                            Text("Abnormal signal", color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 14.sp)
+                        }
+                        Image(
+                            painter = painterResource(R.mipmap.img_magnetic_field),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)
+                        )
+                    }
+                }
+
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp))) {
+                        Column(modifier = Modifier.padding(top = 20.dp, start = 15.dp)) {
+                            Text("Infrared Camera", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
+                            Spacer(modifier = Modifier.height(5.dp))
+                            Text("Flashing light", color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 14.sp)
+                        }
+                        Image(
+                            painter = painterResource(R.mipmap.img_infrared_camera),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)
+                        )
+                    }
+                }
+
+                item {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(2f)
+                        .background(color = White, shape = RoundedCornerShape(10.dp))
+                        .padding(horizontal = 15.dp)
+                    ) {
+                        Text("How it works", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
+                        Image(
+                            painter = painterResource(R.drawable.svg_question),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        )
+                    }
+                }
+
+                item {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(2f)
+                        .background(color = White, shape = RoundedCornerShape(10.dp))
+                        .padding(horizontal = 15.dp)
+                    ) {
+                        Text("Detection history", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
+                        Image(
+                            painter = painterResource(R.drawable.svg_detection_history),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        )
+                    }
+                }
+
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Image(painter = painterResource(R.mipmap.img_home_sub_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
+                        Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp)) {
+                            Text("41%OFF，Get VIP", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("2.33 per week only", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 14.sp)
+                            Spacer(modifier = Modifier.height(15.dp))
+                            Row(modifier = Modifier
+                                .height(26.dp)
+                                .background(color = Color(0xFF5672FF), shape = RoundedCornerShape(200.dp))
+                                .padding(start = 12.dp, end = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("START", color = White, fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 14.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Image(painter = painterResource(R.drawable.svg_next_with_bg), contentDescription = null)
+                            }
+                        }
+                    }
                 }
             }
         }
