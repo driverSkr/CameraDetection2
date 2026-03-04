@@ -2,6 +2,7 @@ package com.ethan.cameradetection2.ui.home.page
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,16 +26,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import com.ethan.cameradetection2.R
+import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White50
 
 @Composable
 fun HomePage() {
+    val context = LocalContext.current
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(painter = painterResource(R.mipmap.img_home_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
         Column(modifier = Modifier
@@ -59,7 +65,7 @@ fun HomePage() {
                 contentPadding = PaddingValues(bottom = 15.dp)
             ) {
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxWidth().clickable{ DialogHelper.requestWifiPermissionDialog(context as FragmentActivity) }) {
                         Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
                             Text("WiFi Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
