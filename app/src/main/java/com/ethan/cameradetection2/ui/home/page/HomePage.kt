@@ -36,6 +36,7 @@ import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White50
+import com.ethan.cameradetection2.ui.setting.Setting2Activity
 
 @Composable
 fun HomePage() {
@@ -53,7 +54,9 @@ fun HomePage() {
                 Spacer(modifier = Modifier.weight(1f))
                 Image(painter = painterResource(R.mipmap.img_pro), contentScale = ContentScale.Crop, contentDescription = null, modifier = Modifier.width(61.dp).height(26.dp))
                 Spacer(modifier = Modifier.width(12.dp))
-                Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null)
+                Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
+                    Setting2Activity.launch(context)
+                })
             }
 
             Spacer(modifier = Modifier.height(20.dp))
