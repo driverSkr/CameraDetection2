@@ -36,7 +36,9 @@ import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White50
+import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
 import com.ethan.cameradetection2.ui.history.HistoryRecordActivity
+import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
 import com.ethan.cameradetection2.ui.setting.Setting2Activity
 
 @Composable
@@ -105,7 +107,9 @@ fun HomePage() {
                 }
 
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp))) {
+                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp)).clickable{
+                        MagneticFieldActivity.launch(context)
+                    }) {
                         Column(modifier = Modifier.padding(top = 20.dp, start = 15.dp)) {
                             Text("Magnetic Field", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
                             Spacer(modifier = Modifier.height(5.dp))
@@ -120,7 +124,9 @@ fun HomePage() {
                 }
 
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp))) {
+                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp)).clickable{
+                        CameraScannerActivity.launch(context)
+                    }) {
                         Column(modifier = Modifier.padding(top = 20.dp, start = 15.dp)) {
                             Text("Infrared Camera", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
                             Spacer(modifier = Modifier.height(5.dp))
