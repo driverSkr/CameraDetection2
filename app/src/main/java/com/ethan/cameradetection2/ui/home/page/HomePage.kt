@@ -36,6 +36,7 @@ import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White50
+import com.ethan.cameradetection2.ui.history.HistoryRecordActivity
 import com.ethan.cameradetection2.ui.setting.Setting2Activity
 
 @Composable
@@ -155,6 +156,9 @@ fun HomePage() {
                         .aspectRatio(2f)
                         .background(color = White, shape = RoundedCornerShape(10.dp))
                         .padding(horizontal = 15.dp)
+                        .clickable {
+                            HistoryRecordActivity.launch(context)
+                        }
                     ) {
                         Text("Detection history", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
                         Image(

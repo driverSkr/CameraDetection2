@@ -27,6 +27,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CameraDetection">
         <activity
+            android:name=".ui.history.HistoryRecordActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.setting.Setting2Activity"
             android:exported="false"
             android:screenOrientation="portrait" />
