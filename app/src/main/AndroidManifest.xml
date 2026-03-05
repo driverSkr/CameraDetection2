@@ -31,6 +31,10 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.wifi.WiFiCamerasActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.history.HistoryRecordActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

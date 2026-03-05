@@ -11,15 +11,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,11 +26,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blankj.utilcode.util.PermissionUtils
@@ -42,22 +37,22 @@ import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.theme.Black
 import com.ethan.cameradetection2.theme.Transparent
 import com.ethan.cameradetection2.theme.White
-import com.ethan.cameradetection2.theme.White10
-import com.ethan.cameradetection2.theme.White60
+import com.ethan.cameradetection2.theme.White50
 import com.ethan.cameradetection2.ui.camera.view.CameraPreview
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
 fun CameraScannerPage() {
     val context = LocalContext.current
-    val colors = listOf(
-        Color(0xFFDD1313),
-        Color(0xFF00C424),
-        Color(0xFF1C73FF)
+    val list = listOf(
+        Triple(R.drawable.svg_red_selected, R.drawable.svg_red_not_selected, Color(0xFFFF0005)),
+        Triple(R.drawable.svg_green_selected, R.drawable.svg_green_not_selected, Color(0xFF00EB5E)),
+        Triple(R.drawable.svg_blue_selected, R.drawable.svg_blue_not_selected, Color(0xFF00ACFF)),
+        Triple(R.drawable.svg_black_50_selected, R.drawable.svg_black_50_not_selected, Color(0x80000000)),
+        Triple(R.drawable.svg_white_selected, R.drawable.svg_white_not_selected, Color(0xFFFFFFFF)),
     )
     var currentFilterColorIndex by remember { mutableStateOf(0) }
     var cameraPermissionGranted by remember { mutableStateOf(false) }
-    val isShowDialogTip = remember { mutableStateOf(true) }
 
     // 请求摄像头权限
     LaunchedEffect(Unit) {
@@ -77,14 +72,7 @@ fun CameraScannerPage() {
             .request()
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(color = Black).statusBarsPadding().navigationBarsPadding()) {
-        Box(modifier = Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 12.dp)) {
-            Image(painter = painterResource(R.drawable.svg_icon_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
-                context.findBaseActivityVBind()?.finish()
-            })
-            Text("Scanner", color = White, fontSize = 18.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.Center))
-        }
-
+    Column(modifier = Modifier.fillMaxSize().background(color = Black).navigationBarsPadding()) {
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             if (cameraPermissionGranted) {
                 CameraPreview(
@@ -94,54 +82,23 @@ fun CameraScannerPage() {
             }
 
             // 滤镜层
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(colors[currentFilterColorIndex].copy(alpha = 0.3f))
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(list[currentFilterColorIndex].third.copy(alpha = 0.3f))
             )
 
-            // 顶部遮罩
-            Box(modifier = Modifier.fillMaxWidth().height(140.dp).background(brush = Brush.verticalGradient(colorStops = arrayOf(0f to Black, 1f to Transparent))))
-            // 底部遮罩
-            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(140.dp).background(brush = Brush.verticalGradient(colorStops = arrayOf(0f to Transparent, 1f to Black))))
-
-            if (isShowDialogTip.value) {
-                Row(modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .background(color = White10, shape = RoundedCornerShape(20.dp))
-                    .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(painter = painterResource(R.drawable.svg_icon_warning_gray), contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Please aim the lens at the detection position, and then press this button to start detection",
-                        color = White60,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.W400, modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Image(painter = painterResource(R.drawable.svg_icon_close), contentDescription = null, modifier = Modifier.clickable{ isShowDialogTip.value = false })
-                }
-            }
-
-            Image(painter = painterResource(R.drawable.svg_icon_retry), contentDescription = null, modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 100.dp, end = 8.dp).clickable{
-                currentFilterColorIndex = 0
+            Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.TopStart).padding(top = 50.dp, start = 15.dp).clickable{
+                context.findBaseActivityVBind()?.finish()
             })
 
-            Row(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 50.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                colors.forEachIndexed { index, color ->
-                    Box(modifier = Modifier
-                        .size(58.dp)
-                        .border(width = 2.dp, color = if (currentFilterColorIndex == index) White else Transparent, shape = RoundedCornerShape(999.dp))
-                        .padding(5.dp)
-                        .background(color = color, shape = RoundedCornerShape(999.dp))
-                        .clickable{ currentFilterColorIndex = index }
-                    )
+        }
+        Column(modifier = Modifier.fillMaxWidth().background(color = Color(0xFF152946)).padding(top = 20.dp, bottom = 30.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(modifier = Modifier.padding(bottom = 20.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                list.forEachIndexed { index, color ->
+                    Image(painter = painterResource(if (currentFilterColorIndex == index) color.first else color.second), contentDescription = null, modifier = Modifier.clickable{ currentFilterColorIndex = index })
                 }
             }
+            Text("Check for flickering or heat sources by aiming at sockets, lamps, TVs, etc.", color = White50, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp))
         }
     }
 }
