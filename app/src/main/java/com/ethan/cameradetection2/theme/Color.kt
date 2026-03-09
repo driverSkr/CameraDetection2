@@ -74,6 +74,7 @@ val White16 = Color(0x29FFFFFF)
 val White12 = Color(0x1FFFFFFF)
 val White10 = Color(0x1AFFFFFF)
 val White8 = Color(0x14FFFFFF)
+val White5 = Color(0x0DFFFFFF)
 val White4 = Color(0x0AFFFFFF)
 val White444447 = Color(0xFF444447)
 

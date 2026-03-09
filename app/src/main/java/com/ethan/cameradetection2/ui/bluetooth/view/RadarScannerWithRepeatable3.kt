@@ -1,4 +1,4 @@
-package com.ethan.cameradetection2.ui.wifi.view
+package com.ethan.cameradetection2.ui.bluetooth.view
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.ethan.cameradetection2.R
 
 @Composable
-fun RadarScannerWithControls2(isAnimating: MutableState<Boolean>) {
+fun RadarScannerWithControls3(isAnimating: MutableState<Boolean>) {
 
     // 使用独立的动画状态
     val infiniteTransition = rememberInfiniteTransition()
@@ -46,7 +46,7 @@ fun RadarScannerWithControls2(isAnimating: MutableState<Boolean>) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.mipmap.img_radar_bg_2),
+            painter = painterResource(R.mipmap.img_radar_bg_3),
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
             contentDescription = "雷达背景"

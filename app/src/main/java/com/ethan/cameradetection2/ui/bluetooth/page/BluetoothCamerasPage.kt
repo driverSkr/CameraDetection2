@@ -1,4 +1,4 @@
-package com.ethan.cameradetection2.ui.wifi.page
+package com.ethan.cameradetection2.ui.bluetooth.page
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,11 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
-import com.ethan.cameradetection2.ui.wifi.view.RadarScannerWithControls2
+import com.ethan.cameradetection2.ui.bluetooth.view.RadarScannerWithControls3
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
-fun WiFiCamerasPage() {
+fun BluetoothCamerasPage() {
     val context = LocalContext.current
     val isAnimating = remember { mutableStateOf(false) }
 
@@ -43,12 +43,12 @@ fun WiFiCamerasPage() {
             Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
                 context.findBaseActivityVBind()?.finish()
             })
-            Text("WiFi Cameras", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+            Text("Bluetooth Cameras", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
         }
 
         Spacer(modifier = Modifier.height(20.dp))
         Box(modifier = Modifier.fillMaxWidth().height(360.dp)) {
-            RadarScannerWithControls2(isAnimating)
+            RadarScannerWithControls3(isAnimating)
             Row(modifier = Modifier.align(Alignment.BottomCenter), verticalAlignment = Alignment.CenterVertically) {
                 Text("Found Devices:", color = Color(0xFF152946), fontSize = 16.sp)
                 Text("99", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold)

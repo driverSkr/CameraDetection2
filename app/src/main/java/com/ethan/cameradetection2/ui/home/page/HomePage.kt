@@ -36,10 +36,12 @@ import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White50
+import com.ethan.cameradetection2.ui.bluetooth.BluetoothCamerasActivity
 import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
 import com.ethan.cameradetection2.ui.history.HistoryRecordActivity
 import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
 import com.ethan.cameradetection2.ui.setting.Setting2Activity
+import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 
 @Composable
@@ -56,7 +58,9 @@ fun HomePage() {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Spy Camera Locator", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
-                Image(painter = painterResource(R.mipmap.img_pro), contentScale = ContentScale.Crop, contentDescription = null, modifier = Modifier.width(61.dp).height(26.dp))
+                Image(painter = painterResource(R.mipmap.img_pro), contentScale = ContentScale.Crop, contentDescription = null, modifier = Modifier.width(61.dp).height(26.dp).clickable{
+                    SubscribeActivity.launch(context)
+                })
                 Spacer(modifier = Modifier.width(12.dp))
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
                     Setting2Activity.launch(context)
@@ -90,7 +94,7 @@ fun HomePage() {
                 }
 
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxWidth().clickable{ BluetoothCamerasActivity.launch(context) }) {
                         Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
                             Text("Bluetooth Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
