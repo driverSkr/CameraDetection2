@@ -30,7 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
-import com.ethan.cameradetection2.theme.Black
 import com.ethan.cameradetection2.theme.Transparent
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White50
@@ -41,9 +40,9 @@ import com.ethan.cameradetection2.utils.findBaseActivityVBind
 fun SubscribePage() {
     val context = LocalContext.current
     val productList = listOf(
-        Triple("≈\$3.99/wk", "\$19.99", "Monthly"),
-        Triple("≈\$0.58/wk", "\$29.99", "Yearly"),
-        Triple("≈\$2.30/wk", "\$6.99", "Weekly"),
+        Triple("Monthly", "\$9.99/Month", "41% OFF"),
+        Triple("Yearly", "\$24.99/Year", "88% OFF"),
+        Triple("Weekly", "\$3.99/Week", "Best for trial"),
     )
     val selectedProduct = remember { mutableStateOf(productList[1]) }
 

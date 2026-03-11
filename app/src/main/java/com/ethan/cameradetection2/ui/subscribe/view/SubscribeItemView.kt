@@ -22,7 +22,9 @@ import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.theme.Transparent
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White10
+import com.ethan.cameradetection2.theme.White30
 import com.ethan.cameradetection2.theme.White5
+import com.ethan.cameradetection2.theme.White50
 
 @Composable
 fun SubscribeItemView(modifier: Modifier = Modifier, product: Triple<String, String, String>, isSelected: Boolean, onClick: () -> Unit) {
@@ -36,6 +38,7 @@ fun SubscribeItemView(modifier: Modifier = Modifier, product: Triple<String, Str
         )
         .clickable{ onClick.invoke() }
     ) {
+        Text(product.third, color = White50, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp))
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -45,11 +48,20 @@ fun SubscribeItemView(modifier: Modifier = Modifier, product: Triple<String, Str
                 .background(color = Color(0xFF4D6180), shape = RoundedCornerShape(8.dp)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(product.first, color = Color(0xFF96939E), fontSize = 12.sp, fontWeight = FontWeight.W400)
             Spacer(modifier = Modifier.height(12.dp))
-            Text(product.second, color = White, fontSize = 20.sp, fontWeight = FontWeight.W700)
+            Text(product.first, color = White50, fontSize = 14.sp, fontWeight = FontWeight.W400)
+            Spacer(modifier = Modifier.weight(1f))
+            Text(product.second, color = White, fontSize = 16.sp, fontWeight = FontWeight.W500)
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = when(product.first) {
+                    "Monthly" -> "2.33/week"
+                    "Yearly" -> "0.48/week"
+                    else -> ""
+                } ,
+                color = White30, fontSize = 12.sp, fontWeight = FontWeight.W400
+            )
             Spacer(modifier = Modifier.height(12.dp))
-            Text(product.third, color = Color(0xFF96939E), fontSize = 12.sp, fontWeight = FontWeight.W400)
         }
     }
 }
