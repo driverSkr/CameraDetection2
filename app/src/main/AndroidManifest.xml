@@ -27,6 +27,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CameraDetection">
         <activity
+            android:name=".ui.result.DetectResultActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.bluetooth.BluetoothCamerasActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

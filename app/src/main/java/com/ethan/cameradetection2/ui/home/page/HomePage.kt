@@ -31,15 +31,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentActivity
 import com.ethan.cameradetection2.R
-import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.theme.White50
 import com.ethan.cameradetection2.ui.bluetooth.BluetoothCamerasActivity
 import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
 import com.ethan.cameradetection2.ui.history.HistoryRecordActivity
 import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
+import com.ethan.cameradetection2.ui.result.DetectResultActivity
 import com.ethan.cameradetection2.ui.setting.Setting2Activity
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
@@ -151,6 +150,9 @@ fun HomePage() {
                         .aspectRatio(2f)
                         .background(color = White, shape = RoundedCornerShape(10.dp))
                         .padding(horizontal = 15.dp)
+                        .clickable{
+                            DetectResultActivity.launch(context)
+                        }
                     ) {
                         Text("How it works", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
                         Image(
