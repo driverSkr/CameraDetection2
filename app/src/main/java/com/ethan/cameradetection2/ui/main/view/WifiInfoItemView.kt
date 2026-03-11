@@ -2,6 +2,7 @@ package com.ethan.cameradetection2.ui.main.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,7 +37,8 @@ fun WifiInfoItemView(info: WifiDevice, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(71.dp)
-            .background(color = White10, shape = RoundedCornerShape(20.dp))
+            .border(width = 1.dp, color = Color(0x145874FF), shape = RoundedCornerShape(20.dp))
+            .background(color = White, shape = RoundedCornerShape(20.dp))
             .padding(horizontal = 16.dp)
             .clickable{ onClick.invoke() },
         verticalAlignment = Alignment.CenterVertically
@@ -43,9 +46,9 @@ fun WifiInfoItemView(info: WifiDevice, onClick: () -> Unit) {
         Image(painter = painterResource(deviceType), contentDescription = null)
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(info.name, color = White, fontSize = 16.sp, fontWeight = FontWeight.W500)
+            Text(info.name, color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W500)
             Spacer(modifier = Modifier.height(3.dp))
-            Text(info.ip, color = White60, fontSize = 12.sp, fontWeight = FontWeight.W400)
+            Text(info.ip, color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.W400)
         }
         Spacer(modifier = Modifier.weight(1f))
         Image(painter = painterResource(if (info.riskLevel == 0) R.drawable.svg_icon_safety else R.drawable.svg_icon_risk), contentDescription = null)

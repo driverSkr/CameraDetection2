@@ -1,5 +1,15 @@
 package com.ethan.cameradetection2.ui.bluetooth.page
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,8 +25,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,17 +38,36 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import com.ethan.cameradetection2.R
+import com.ethan.cameradetection2.model.BluetoothDevice
 import com.ethan.cameradetection2.ui.bluetooth.view.RadarScannerWithControls3
+import com.ethan.cameradetection2.ui.result.BluetoothScanResultActivity
+import com.ethan.cameradetection2.utils.BluetoothHelper
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
 fun BluetoothCamerasPage() {
     val context = LocalContext.current
-    val isAnimating = remember { mutableStateOf(false) }
+    val isAnimating = remember { mutableStateOf(true) }
+    val suspiciousDevices = remember { mutableStateListOf<BluetoothDevice>() }
+    val trustedDevices = remember { mutableStateListOf<BluetoothDevice>() }
+    val localBluetoothMac = remember {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        bluetoothAdapter?.address ?: ""
+    }
 
     LaunchedEffect(Unit) {
-        isAnimating.value = true
+        startBluetoothScan(context, isAnimating, localBluetoothMac, suspiciousDevices, trustedDevices)
+    }
+
+    LaunchedEffect(isAnimating.value) {
+        if (!isAnimating.value) {
+            val suspiciousDevicesList = ArrayList(suspiciousDevices.toList())
+            val trustedDevicesList = ArrayList(trustedDevices.toList())
+            BluetoothScanResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList)
+            context.findBaseActivityVBind()?.finish()
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -51,7 +83,7 @@ fun BluetoothCamerasPage() {
             RadarScannerWithControls3(isAnimating)
             Row(modifier = Modifier.align(Alignment.BottomCenter), verticalAlignment = Alignment.CenterVertically) {
                 Text("Found Devices:", color = Color(0xFF152946), fontSize = 16.sp)
-                Text("99", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("${suspiciousDevices.size + trustedDevices.size}", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -89,4 +121,94 @@ fun BluetoothCamerasPage() {
             Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
         }
     }
+}
+
+private fun startBluetoothScan(context: Context, isAnimating: MutableState<Boolean>, localBluetoothMac: String, suspiciousDevices: SnapshotStateList<BluetoothDevice>, trustedDevices: SnapshotStateList<BluetoothDevice>) {
+    val handler = Handler(Looper.getMainLooper())
+    val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    val bluetoothAdapter = manager.adapter
+    val leScanner = bluetoothAdapter!!.bluetoothLeScanner
+    suspiciousDevices.clear()
+    trustedDevices.clear()
+    addMine(bluetoothAdapter, trustedDevices)
+    // 经典蓝牙
+    scanClassicBluetooth(context, handler, bluetoothAdapter, localBluetoothMac, suspiciousDevices, trustedDevices)
+    // BLE
+    scanLeBluetooth(context, handler, leScanner, localBluetoothMac, suspiciousDevices, trustedDevices)
+    // 定时停止
+    handler.postDelayed({
+        try {
+            bluetoothAdapter.cancelDiscovery()
+        } catch (_: Exception) {
+        }
+        // todo 保存到本地
+        // todo 跳转
+        isAnimating.value = false
+    }, 12000L)
+}
+
+fun addMine(bluetoothAdapter: BluetoothAdapter, trustedDevices: SnapshotStateList<BluetoothDevice>) {
+
+    val bluetoothName = bluetoothAdapter.name ?: "Unknown"
+    val bluetoothAddress = bluetoothAdapter.address ?: "Unknown"
+
+    val myDevice = BluetoothDevice(
+        name = bluetoothName,
+        type = "Phone",
+        mac = bluetoothAddress,
+        iconRes = BluetoothHelper.getDeviceIcon("Phone", 0),
+        signal = 100,
+        signalColor = BluetoothHelper.getSignalColor(100),
+        uuid = "",
+        connected = true,
+        rssi = 0,
+        riskLevel = 0
+    )
+    trustedDevices.clear()
+    trustedDevices.add(0, myDevice)
+}
+
+private fun scanClassicBluetooth(context: Context, handler: Handler, bluetoothAdapter: BluetoothAdapter, localBluetoothMac: String, suspiciousDevices: SnapshotStateList<BluetoothDevice>, trustedDevices: SnapshotStateList<BluetoothDevice>) {
+    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+        return
+    }
+    val paired = bluetoothAdapter.bondedDevices ?: emptySet()
+    for (device in paired) {
+        BluetoothHelper.addDevice(device, rssi = null, localBluetoothMac, suspiciousDevices, trustedDevices)
+    }
+    bluetoothAdapter.startDiscovery()
+    val receiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: android.content.Intent?) {
+            val action = intent?.action
+            if (android.bluetooth.BluetoothDevice.ACTION_FOUND == action) {
+                val device =
+                    intent.getParcelableExtra<android.bluetooth.BluetoothDevice>(android.bluetooth.BluetoothDevice.EXTRA_DEVICE)
+                val rssi =
+                    intent.getShortExtra(android.bluetooth.BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE).toInt()
+                if (device != null) BluetoothHelper.addDevice(device, rssi, localBluetoothMac, suspiciousDevices, trustedDevices)
+            }
+        }
+    }
+    val filter = android.content.IntentFilter(android.bluetooth.BluetoothDevice.ACTION_FOUND)
+    context.registerReceiver(receiver, filter)
+    handler.postDelayed({
+        try { context.unregisterReceiver(receiver) } catch (_: Exception) { }
+    }, 12000L)
+}
+
+private fun scanLeBluetooth(context: Context, handler: Handler, leScanner: BluetoothLeScanner, localBluetoothMac: String, suspiciousDevices: SnapshotStateList<BluetoothDevice>, trustedDevices: SnapshotStateList<BluetoothDevice>) {
+    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+        return
+    }
+    val leScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            result?.device?.let { BluetoothHelper.addDevice(it, result.rssi, localBluetoothMac, suspiciousDevices, trustedDevices) }
+        }
+
+        override fun onBatchScanResults(results: MutableList<ScanResult>?) {
+            results?.forEach { BluetoothHelper.addDevice(it.device, it.rssi, localBluetoothMac, suspiciousDevices, trustedDevices) }
+        }
+    }
+    leScanner.startScan(leScanCallback)
+    handler.postDelayed({ leScanner.stopScan(leScanCallback) }, 12000L)
 }

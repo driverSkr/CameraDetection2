@@ -51,6 +51,13 @@ object WifiHelper {
         return nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
     }
 
+    fun hasWifiPermission(context: Context): Boolean {
+        val needNearby = Build.VERSION.SDK_INT >= 33
+        val hasLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasNearby = !needNearby || ContextCompat.checkSelfPermission(context, Manifest.permission.NEARBY_WIFI_DEVICES) == PackageManager.PERMISSION_GRANTED
+        return !(!hasNearby || !hasLocation)
+    }
+
     // 检测WI-FI权限
     fun checkWifiPermission(context: Context, wifiPermissionLauncher: ActivityResultLauncher<Array<String>>) {
         if (!isWifiEnabled(context)) {

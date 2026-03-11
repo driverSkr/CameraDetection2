@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature
@@ -27,8 +31,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CameraDetection">
         <activity
-            android:name=".ui.result.DetectResultActivity"
-            android:exported="false" />
+            android:name=".ui.result.BluetoothScanResultActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.result.WifiDetectResultActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ui.bluetooth.BluetoothCamerasActivity"
             android:exported="false"

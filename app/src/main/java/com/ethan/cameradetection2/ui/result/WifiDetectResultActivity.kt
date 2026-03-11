@@ -8,20 +8,27 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import com.ethan.cameradetection2.base.BaseActivityVBind
 import com.ethan.cameradetection2.databinding.LayoutComposeContainerBinding
+import com.ethan.cameradetection2.model.WifiDevice
 import com.ethan.cameradetection2.theme.ComposeProjectTheme
 import com.ethan.cameradetection2.theme.Transparent
-import com.ethan.cameradetection2.ui.result.page.DetectResultPage
+import com.ethan.cameradetection2.ui.result.page.WifiDetectResultPage
+import com.skydoves.bundler.bundle
 import com.skydoves.bundler.intentOf
 
-class DetectResultActivity : BaseActivityVBind<LayoutComposeContainerBinding>() {
+class WifiDetectResultActivity : BaseActivityVBind<LayoutComposeContainerBinding>() {
 
     companion object {
-        fun launch(context: Context) {
-            context.intentOf<DetectResultActivity> {
+        fun launch(context: Context, suspiciousDevices: List<WifiDevice>, trustedDevices: List<WifiDevice>) {
+            context.intentOf<WifiDetectResultActivity> {
+                +("suspiciousDevices" to suspiciousDevices)
+                +("trustedDevices" to trustedDevices)
                 startActivity(context)
             }
         }
     }
+
+    private val suspiciousDevices by bundle<ArrayList<WifiDevice>>("suspiciousDevices")
+    private val trustedDevices by bundle<ArrayList<WifiDevice>>("trustedDevices")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +37,7 @@ class DetectResultActivity : BaseActivityVBind<LayoutComposeContainerBinding>() 
                 CompositionLocalProvider {
                     ComposeProjectTheme {
                         Surface(modifier = Modifier.fillMaxSize(), color = Transparent) {
-                            DetectResultPage()
+                            WifiDetectResultPage(suspiciousDevices, trustedDevices)
                         }
                     }
                 }

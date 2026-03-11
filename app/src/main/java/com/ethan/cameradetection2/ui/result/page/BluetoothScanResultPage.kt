@@ -1,7 +1,9 @@
 package com.ethan.cameradetection2.ui.result.page
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,15 +26,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import com.ethan.cameradetection2.R
+import com.ethan.cameradetection2.dialog.DialogHelper
+import com.ethan.cameradetection2.model.BluetoothDevice
+import com.ethan.cameradetection2.model.WifiDevice
+import com.ethan.cameradetection2.theme.Black
+import com.ethan.cameradetection2.theme.Purple40
+import com.ethan.cameradetection2.theme.White
+import com.ethan.cameradetection2.ui.main.view.WifiInfoItemView
+import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
-fun DetectResultPage() {
+fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDevices: List<BluetoothDevice>?) {
     val context = LocalContext.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(color = White)) {
         Image(painter = painterResource(R.mipmap.img_history_record_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
             Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp)) {
@@ -47,6 +58,7 @@ fun DetectResultPage() {
 
             LazyColumn(
                 contentPadding = PaddingValues(top = 30.dp, start = 15.dp, end = 15.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
                 item {
@@ -67,6 +79,31 @@ fun DetectResultPage() {
                     Column {
                         Text("Cameras", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W500)
                         Text("Click any item to learn more details", color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.W400)
+                    }
+                }
+
+                suspiciousDevices?.let {
+                    items(it.size) { index ->
+                        Text(it[index].name, color = Black)
+                    }
+                }
+
+                item {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Column {
+                            Text("Devices transmiting traffic via WiFi", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W500)
+                            Text("Click any item to learn more details", color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.W400)
+                        }
+
+                        Image(painter = painterResource(R.mipmap.img_unlock), contentDescription = null, modifier = Modifier.background(color = Purple40).clickable{
+                            SubscribeActivity.launch(context)
+                        })
+                    }
+                }
+
+                trustedDevices?.let {
+                    items(it.size) { index ->
+                        Text(it[index].name, color = Black)
                     }
                 }
             }

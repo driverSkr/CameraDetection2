@@ -1,5 +1,10 @@
 package com.ethan.cameradetection2.ui.home.page
 
+import android.Manifest
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,14 +43,39 @@ import com.ethan.cameradetection2.ui.bluetooth.BluetoothCamerasActivity
 import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
 import com.ethan.cameradetection2.ui.history.HistoryRecordActivity
 import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
-import com.ethan.cameradetection2.ui.result.DetectResultActivity
 import com.ethan.cameradetection2.ui.setting.Setting2Activity
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
+import com.ethan.cameradetection2.utils.BluetoothHelper
+import com.ethan.cameradetection2.utils.WifiHelper
 
 @Composable
 fun HomePage() {
     val context = LocalContext.current
+    val wifiPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true && (Build.VERSION.SDK_INT < 33 || permissions[Manifest.permission.NEARBY_WIFI_DEVICES] == true)
+        if (granted) {
+            Toast.makeText(context, "权限获得成功", Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(context, "没有权限", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+        val allGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ 检查所有蓝牙权限
+            permissions[Manifest.permission.BLUETOOTH_SCAN] == true && permissions[Manifest.permission.BLUETOOTH_CONNECT] == true
+        } else {
+            // Android 11 及以下检查位置权限
+            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        }
+
+        if (allGranted) {
+            Toast.makeText(context, "权限获取成功", Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(context, "没有获得必要权限，功能受限", Toast.LENGTH_LONG).show()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(painter = painterResource(R.mipmap.img_home_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
@@ -75,7 +105,13 @@ fun HomePage() {
                 contentPadding = PaddingValues(bottom = 15.dp)
             ) {
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth().clickable{ WiFiCamerasActivity.launch(context) }) {
+                    Box(modifier = Modifier.fillMaxWidth().clickable{
+                        if (WifiHelper.hasWifiPermission(context)) {
+                            WiFiCamerasActivity.launch(context)
+                        } else {
+                            WifiHelper.checkWifiPermission(context, wifiPermissionLauncher)
+                        }
+                    }) {
                         Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
                             Text("WiFi Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
@@ -93,7 +129,13 @@ fun HomePage() {
                 }
 
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth().clickable{ BluetoothCamerasActivity.launch(context) }) {
+                    Box(modifier = Modifier.fillMaxWidth().clickable{
+                        if (BluetoothHelper.hasBluetoothPermission(context)) {
+                            BluetoothCamerasActivity.launch(context)
+                        } else {
+                            BluetoothHelper.checkBluetoothPermission(context, bluetoothPermissionLauncher)
+                        }
+                    }) {
                         Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
                             Text("Bluetooth Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
@@ -151,7 +193,7 @@ fun HomePage() {
                         .background(color = White, shape = RoundedCornerShape(10.dp))
                         .padding(horizontal = 15.dp)
                         .clickable{
-                            DetectResultActivity.launch(context)
+
                         }
                     ) {
                         Text("How it works", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))

@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.WifiDevice
-import com.ethan.cameradetection2.ui.result.DetectResultActivity
+import com.ethan.cameradetection2.ui.result.WifiDetectResultActivity
 import com.ethan.cameradetection2.ui.wifi.view.RadarScannerWithControls2
 import com.ethan.cameradetection2.utils.WifiHelper
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
@@ -66,7 +66,10 @@ fun WiFiCamerasPage() {
 
     LaunchedEffect(isAnimating.value) {
         if (!isAnimating.value && detectProgress.intValue == 100) {
-            DetectResultActivity.launch(context)
+            val suspiciousDevicesList = ArrayList(suspiciousDevices.toList())
+            val trustedDevicesList = ArrayList(trustedDevices.toList())
+            WifiDetectResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList)
+            context.findBaseActivityVBind()?.finish()
         }
     }
 
