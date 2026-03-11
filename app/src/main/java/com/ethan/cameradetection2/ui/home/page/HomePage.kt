@@ -225,7 +225,7 @@ fun HomePage() {
                 }
 
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxWidth().clickable{ SubscribeActivity.launch(context) }) {
                         Image(painter = painterResource(R.mipmap.img_home_sub_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp)) {
                             Text("41%OFF，Get VIP", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)

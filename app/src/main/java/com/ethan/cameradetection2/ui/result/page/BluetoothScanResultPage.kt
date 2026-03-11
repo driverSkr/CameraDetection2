@@ -35,6 +35,7 @@ import com.ethan.cameradetection2.theme.Black
 import com.ethan.cameradetection2.theme.Purple40
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.ui.main.view.WifiInfoItemView
+import com.ethan.cameradetection2.ui.result.view.BluetoothInfoDevice
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
@@ -84,7 +85,7 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
 
                 suspiciousDevices?.let {
                     items(it.size) { index ->
-                        Text(it[index].name, color = Black)
+                        BluetoothInfoDevice(it[index])
                     }
                 }
 
@@ -103,7 +104,7 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
 
                 trustedDevices?.let {
                     items(it.size) { index ->
-                        Text(it[index].name, color = Black)
+                        BluetoothInfoDevice(it[index])
                     }
                 }
             }
