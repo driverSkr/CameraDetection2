@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,9 +45,11 @@ import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
 import com.ethan.cameradetection2.ui.history.HistoryRecordActivity
 import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
 import com.ethan.cameradetection2.ui.setting.Setting2Activity
+import com.ethan.cameradetection2.ui.subscribe.SplashScreenSubscribeActivity
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 import com.ethan.cameradetection2.utils.BluetoothHelper
+import com.ethan.cameradetection2.utils.DataHelper
 import com.ethan.cameradetection2.utils.WifiHelper
 
 @Composable
@@ -74,6 +77,12 @@ fun HomePage() {
             Toast.makeText(context, "权限获取成功", Toast.LENGTH_LONG).show()
         } else {
             Toast.makeText(context, "没有获得必要权限，功能受限", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (DataHelper.isFirst(context, "enter_home_page")) {
+            SplashScreenSubscribeActivity.launch(context)
         }
     }
 
