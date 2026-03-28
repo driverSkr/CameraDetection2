@@ -26,15 +26,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentActivity
 import com.ethan.cameradetection2.R
-import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.model.BluetoothDevice
-import com.ethan.cameradetection2.model.WifiDevice
-import com.ethan.cameradetection2.theme.Black
 import com.ethan.cameradetection2.theme.Purple40
 import com.ethan.cameradetection2.theme.White
-import com.ethan.cameradetection2.ui.main.view.WifiInfoItemView
 import com.ethan.cameradetection2.ui.result.view.BluetoothInfoDevice
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity

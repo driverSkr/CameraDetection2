@@ -92,7 +92,7 @@ fun BluetoothScanDetailPage() {
                     }
                     Spacer(modifier = Modifier.height(25.dp))
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Image(painter = painterResource(R.drawable.svg_mac), contentDescription = null)
+                        Image(painter = painterResource(R.drawable.svg_pc), contentDescription = null)
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("MAC", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))

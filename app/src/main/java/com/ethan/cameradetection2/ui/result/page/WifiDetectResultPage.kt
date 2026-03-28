@@ -1,5 +1,6 @@
 package com.ethan.cameradetection2.ui.result.page
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,15 +38,25 @@ import com.ethan.cameradetection2.ui.main.view.WifiInfoItemView
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
+import com.ethan.cameradetection2.utils.timestampToDate
 
 @Composable
 fun WifiDetectResultPage(suspiciousDevices: List<WifiDevice>?, trustedDevices: List<WifiDevice>?) {
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        suspiciousDevices?.forEach { device ->
+            Log.i("危险设备", device.toString())
+        }
+        trustedDevices?.forEach { device ->
+            Log.i("信任设备", device.toString())
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
         Image(painter = painterResource(R.mipmap.img_history_record_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
-            Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp, end = 15.dp)) {
                 Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
                     context.findBaseActivityVBind()?.finish()
                 })
@@ -55,20 +67,20 @@ fun WifiDetectResultPage(suspiciousDevices: List<WifiDevice>?, trustedDevices: L
             }
 
             LazyColumn(
-                contentPadding = PaddingValues(top = 30.dp, start = 15.dp, end = 15.dp),
+                contentPadding = PaddingValues(top = 30.dp, start = 15.dp, end = 15.dp, bottom = 37.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Row(modifier = Modifier.align(Alignment.CenterHorizontally), verticalAlignment = Alignment.Bottom) {
-                            Text("3", color = Color(0xFFF53863), fontSize = 50.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
-                            Text("/99", color = Color(0xFFF53863), fontSize = 30.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
+                            Text("${trustedDevices?.size ?: 0}", color = Color(0xFFF53863), fontSize = 50.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
+                            Text("/${(suspiciousDevices?.size ?: 0) + (trustedDevices?.size ?: 0)}", color = Color(0xFFF53863), fontSize = 30.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
                         }
                         Spacer(modifier = Modifier.height(18.dp))
                         Text("Suspected cameras found", color = Color(0xFFF53863), fontSize = 16.sp, fontWeight = FontWeight.W500)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("WiFi Name:2025-09-21 12:23:23", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W400)
+                        Text("WiFi Name:${timestampToDate()}", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W400)
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
