@@ -26,13 +26,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentActivity
 import com.ethan.cameradetection2.R
-import com.ethan.cameradetection2.dialog.DialogHelper
 import com.ethan.cameradetection2.model.WifiDevice
 import com.ethan.cameradetection2.theme.Purple40
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.ui.main.view.WifiInfoItemView
+import com.ethan.cameradetection2.ui.result.WifiDetectDetailActivity
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
@@ -83,7 +82,7 @@ fun WifiDetectResultPage(suspiciousDevices: List<WifiDevice>?, trustedDevices: L
                 suspiciousDevices?.let {
                     items(it.size) { index ->
                         WifiInfoItemView(it[index]) {
-                            DialogHelper.showWifiInfoDialog(context as FragmentActivity, it[index])
+                            WifiDetectDetailActivity.launch(context, it[index])
                         }
                     }
                 }
@@ -104,7 +103,7 @@ fun WifiDetectResultPage(suspiciousDevices: List<WifiDevice>?, trustedDevices: L
                 trustedDevices?.let {
                     items(it.size) { index ->
                         WifiInfoItemView(it[index]) {
-                            DialogHelper.showWifiInfoDialog(context as FragmentActivity, it[index])
+                            WifiDetectDetailActivity.launch(context, it[index])
                         }
                     }
                 }
