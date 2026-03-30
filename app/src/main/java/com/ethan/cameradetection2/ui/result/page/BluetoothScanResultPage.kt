@@ -28,12 +28,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.BluetoothDevice
+import com.ethan.cameradetection2.theme.Green
 import com.ethan.cameradetection2.theme.Purple40
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.ui.result.view.BluetoothInfoDevice
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
+import com.ethan.cameradetection2.utils.timestampToDate
 
 @Composable
 fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDevices: List<BluetoothDevice>?) {
@@ -46,7 +48,7 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
                 Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
                     context.findBaseActivityVBind()?.finish()
                 })
-                Text("WiFi Cameras", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                Text("Bluetooth Cameras", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
                 Image(painter = painterResource(R.drawable.svg_retry_with_bg), contentDescription = null, modifier = Modifier.align(Alignment.CenterEnd).clickable{
                     WiFiCamerasActivity.launch(context)
                 })
@@ -60,13 +62,13 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Row(modifier = Modifier.align(Alignment.CenterHorizontally), verticalAlignment = Alignment.Bottom) {
-                            Text("3", color = Color(0xFFF53863), fontSize = 50.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
-                            Text("/99", color = Color(0xFFF53863), fontSize = 30.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
+                            Text("${suspiciousDevices?.size ?: 0}", color = if ((suspiciousDevices?.size ?: 0) > 0) Color(0xFFF53863) else Green, fontSize = 50.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
+                            Text("/${(suspiciousDevices?.size ?: 0) + (trustedDevices?.size ?: 0)}", color = if ((suspiciousDevices?.size ?: 0) > 0) Color(0xFFF53863) else Green, fontSize = 30.sp, fontWeight = FontWeight.W600, lineHeight = 50.sp)
                         }
                         Spacer(modifier = Modifier.height(18.dp))
-                        Text("Suspected cameras found", color = Color(0xFFF53863), fontSize = 16.sp, fontWeight = FontWeight.W500)
+                        Text("Suspected cameras found", color = if ((suspiciousDevices?.size ?: 0) > 0) Color(0xFFF53863) else Green, fontSize = 16.sp, fontWeight = FontWeight.W500)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("WiFi Name:2025-09-21 12:23:23", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W400)
+                        Text("Bluetooth Online:${timestampToDate()}", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W400)
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
@@ -87,13 +89,9 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
                 item {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Column {
-                            Text("Devices transmiting traffic via WiFi", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W500)
+                            Text("Devices transmiting traffic via Bluetooth", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.W500)
                             Text("Click any item to learn more details", color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.W400)
                         }
-
-                        Image(painter = painterResource(R.mipmap.img_unlock), contentDescription = null, modifier = Modifier.background(color = Purple40).clickable{
-                            SubscribeActivity.launch(context)
-                        })
                     }
                 }
 

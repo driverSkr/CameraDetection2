@@ -32,7 +32,7 @@ import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.WifiDevice
 import com.ethan.cameradetection2.theme.Purple40
 import com.ethan.cameradetection2.theme.White
-import com.ethan.cameradetection2.ui.main.view.WifiInfoItemView
+import com.ethan.cameradetection2.ui.result.view.WifiInfoItemView
 import com.ethan.cameradetection2.ui.result.WifiDetectDetailActivity
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity

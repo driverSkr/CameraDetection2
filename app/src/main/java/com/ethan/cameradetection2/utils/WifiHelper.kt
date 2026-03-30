@@ -6,14 +6,12 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.wifi.WifiManager
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.WifiDevice
-import com.ethan.cameradetection2.model.WifiInfo
 import com.stealthcopter.networktools.PortScan
 import com.stealthcopter.networktools.subnet.Device
 import java.util.Collections
@@ -73,21 +71,6 @@ object WifiHelper {
             if (needNearby) permission.add(Manifest.permission.NEARBY_WIFI_DEVICES)
             wifiPermissionLauncher.launch(permission.toTypedArray())
         }
-    }
-
-    fun showWifiInfo(context: Context): WifiInfo {
-        val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        val wifiInfo = wifiManager.connectionInfo
-        val ssid = wifiInfo.ssid?.removeSurrounding("\"") ?: "Unknown"
-        val ipInt = wifiInfo.ipAddress
-        val ip = String.format(
-            "%d.%d.%d.%d",
-            ipInt and 0xff,
-            ipInt shr 8 and 0xff,
-            ipInt shr 16 and 0xff,
-            ipInt shr 24 and 0xff
-        )
-        return WifiInfo(ssid, ip)
     }
 
     // 检测设备类型（端口扫描+推断）

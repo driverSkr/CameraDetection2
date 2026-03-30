@@ -1,126 +1,80 @@
 package com.ethan.cameradetection2.ui.setting.page
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
-import com.ethan.cameradetection2.theme.Black
-import com.ethan.cameradetection2.theme.White
-import com.ethan.cameradetection2.ui.setting.view.SettingItemView
-import com.ethan.cameradetection2.utils.LaunchUtils
-import com.ethan.cameradetection2.utils.ShareUtils
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
-import com.google.android.play.core.review.ReviewException
-import com.google.android.play.core.review.ReviewManagerFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 fun SettingPage() {
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val settingItemList = listOf(
-        Pair(R.drawable.svg_icon_share_app, "Share App"),
-        Pair(R.drawable.svg_icon_privacy_policy, "Privacy Policy"),
-//        Pair(R.drawable.svg_icon_restore, "Restore"),
-        Pair(R.drawable.svg_icon_rate_us, "Rate us"),
-    )
 
-    Column(modifier = Modifier.fillMaxSize().background(color = Black).statusBarsPadding()) {
-        Box(modifier = Modifier.fillMaxWidth().height(54.dp).padding(start = 12.dp, end = 16.dp)) {
-            Image(
-                painter = painterResource(R.drawable.svg_icon_back),
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .clickable{ context.findBaseActivityVBind()?.finish() }
-            )
-            Text("Setting", color = White, fontSize = 18.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.Center))
-            // todo 第一版先不要订阅页
-//            Image(
-//                painter = painterResource(R.mipmap.img_crown),
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .size(40.dp)
-//                    .align(Alignment.CenterEnd)
-//                    .clickable{ SubscribeActivity.launch(context) }
-//            )
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(painter = painterResource(R.mipmap.img_settings_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+            Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp)) {
+                Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
+                    context.findBaseActivityVBind()?.finish()
+                })
+                Text("Settings", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+            }
 
-        // todo 第一版先不要订阅页
-//        Spacer(modifier = Modifier.height(28.dp))
-//        Image(
-//            painter = painterResource(R.mipmap.img_subscribe_card),
-//            contentScale = ContentScale.Fit,
-//            contentDescription = null,
-//            modifier = Modifier
-//                .padding(horizontal = 16.dp)
-//                .fillMaxWidth()
-//                .clickable{ SubscribeActivity.launch(context) }
-//        )
-        Spacer(modifier = Modifier.height(19.dp))
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(settingItemList.size) { index ->
-                SettingItemView(settingItemList[index]) {
-                    when(settingItemList[index].second) {
-                        "Share App" -> {
-                            // todo 分享应用链接
-                            ShareUtils.shareTextWithHighlightedLinks(context, "应用分享", "应用链接")
-                        }
-                        "Privacy Policy" -> {
-                            // todo 待提供隐私链接
-                            LaunchUtils.launchWeb(context, "https://www.baidu.com", "测试")
-                        }
-                        "Rate us" -> {
-                            scope.launch(Dispatchers.Main) {
-                                context.findBaseActivityVBind()?.let { activityVBind ->
-                                    val manager = ReviewManagerFactory.create(context)
-                                    val request = manager.requestReviewFlow()
-                                    request.addOnCompleteListener { task ->
-                                        if (task.isSuccessful) {
-                                            val reviewInfo = task.result
-                                            val flow = manager.launchReviewFlow(activityVBind, reviewInfo)
-                                            flow.addOnCompleteListener { result ->
-                                                // 用户已经看到评分弹窗，无论他们是否实际评分
-                                                // 用户在这里记录日志或执行其他操作
-                                                Log.d("ethan", "结果${result.result}")
-                                            }
-                                        } else {
-                                            val reviewErrorCode = (task.exception as ReviewException).errorCode
-                                            Log.e("ethan", "Review error:$reviewErrorCode")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            Spacer(modifier = Modifier.height(28.dp))
+            Box(modifier = Modifier.fillMaxWidth().height(32.dp).background(color = Color(0x0844546B))) {
+                Text("Suscription", color = Color(0xFF1D2833), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp))
+            }
+            Row(modifier = Modifier.padding(start = 20.dp, top = 25.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painter = painterResource(R.drawable.svg_restore), contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Restore", color = Color(0xFF1D2833), fontSize = 14.sp)
+            }
+            Row(modifier = Modifier.padding(start = 20.dp, top = 25.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painter = painterResource(R.drawable.svg_manage), contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Manage", color = Color(0xFF1D2833), fontSize = 14.sp)
+            }
+
+            Spacer(modifier = Modifier.height(35.dp))
+            Box(modifier = Modifier.fillMaxWidth().height(32.dp).background(color = Color(0x0844546B))) {
+                Text("About", color = Color(0xFF1D2833), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp))
+            }
+
+            Row(modifier = Modifier.padding(start = 20.dp, top = 25.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painter = painterResource(R.drawable.svg_term_of_use), contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Term of Use", color = Color(0xFF1D2833), fontSize = 14.sp)
+            }
+            Row(modifier = Modifier.padding(start = 20.dp, top = 25.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painter = painterResource(R.drawable.svg_privacy_policy), contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Privacy Policy", color = Color(0xFF1D2833), fontSize = 14.sp)
+            }
+            Row(modifier = Modifier.padding(start = 20.dp, top = 25.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painter = painterResource(R.drawable.svg_rate_us), contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Rate us", color = Color(0xFF1D2833), fontSize = 14.sp)
             }
         }
     }

@@ -44,7 +44,7 @@ import com.ethan.cameradetection2.ui.bluetooth.BluetoothCamerasActivity
 import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
 import com.ethan.cameradetection2.ui.history.HistoryRecordActivity
 import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
-import com.ethan.cameradetection2.ui.setting.Setting2Activity
+import com.ethan.cameradetection2.ui.setting.SettingActivity
 import com.ethan.cameradetection2.ui.subscribe.SplashScreenSubscribeActivity
 import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
 import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
@@ -101,7 +101,7 @@ fun HomePage() {
                 })
                 Spacer(modifier = Modifier.width(12.dp))
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
-                    Setting2Activity.launch(context)
+                    SettingActivity.launch(context)
                 })
             }
 
