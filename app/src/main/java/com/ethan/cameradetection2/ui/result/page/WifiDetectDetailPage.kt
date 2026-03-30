@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.WifiDevice
 import com.ethan.cameradetection2.theme.White
+import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
+import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
@@ -97,7 +99,7 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
             Spacer(modifier = Modifier.weight(1f))
             Text("Suspected hidden camera. Locate it immediately.", color = Color(0xFF44546B), fontSize = 14.sp, fontWeight = FontWeight.W700, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(15.dp))
-            Box(modifier = Modifier.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
+            Box(modifier = Modifier.clickable{ MagneticFieldActivity.launch(context) }.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
                 Column(modifier = Modifier.fillMaxSize().padding(15.dp)) {
                     Text("Find out the operating range of equipment by magnetic field signal", color = White, fontSize = 12.sp, fontWeight = FontWeight.W500, lineHeight = 12.sp, modifier = Modifier.fillMaxWidth().padding(end = 125.dp))
                     Spacer(modifier = Modifier.weight(1f))
@@ -107,7 +109,7 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Box(modifier = Modifier.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
+            Box(modifier = Modifier.clickable{ CameraScannerActivity.launch(context) }.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
                 Column(modifier = Modifier.fillMaxSize().padding(15.dp)) {
                     Text("Find the flickering pinhole camera through the infrared camera.", color = White, fontSize = 12.sp, fontWeight = FontWeight.W500, lineHeight = 12.sp, modifier = Modifier.fillMaxWidth().padding(end = 125.dp))
                     Spacer(modifier = Modifier.weight(1f))

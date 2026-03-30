@@ -2,6 +2,7 @@ package com.ethan.cameradetection2.ui.wifi.page
 
 import android.content.Context
 import android.net.wifi.WifiManager
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,12 +14,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,11 +32,13 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.MutableLiveData
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.WifiDevice
 import com.ethan.cameradetection2.ui.result.WifiDetectResultActivity
@@ -59,9 +66,15 @@ fun WiFiCamerasPage() {
             wifiInfo.ipAddress shr 24 and 0xff
         )
     }
+    val loadingState = remember { MutableLiveData(0) }
+    val currentLoadingState by loadingState.observeAsState(0)
 
     LaunchedEffect(Unit) {
-        wifiDetect(localIp, suspiciousDevices, trustedDevices, isAnimating, detectProgress)
+        wifiDetect(localIp, suspiciousDevices, trustedDevices, isAnimating, detectProgress, loadingState)
+    }
+
+    LaunchedEffect(currentLoadingState) {
+        Log.i("进度状态", "$currentLoadingState")
     }
 
     LaunchedEffect(isAnimating.value) {
@@ -97,31 +110,51 @@ fun WiFiCamerasPage() {
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Camera Detector Ready...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 1) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Detecting Suspicious Devices...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 2) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Analyzing Device Ports...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 3) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Identifying Camera...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 4) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Collate Detection Results...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 5) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
     }
 }
@@ -131,23 +164,30 @@ private fun wifiDetect(
     suspiciousDevices: SnapshotStateList<WifiDevice>,
     trustedDevices: SnapshotStateList<WifiDevice>,
     isAnimating: MutableState<Boolean>,
-    detectProgress: MutableIntState
+    detectProgress: MutableIntState,
+    loadingState: MutableLiveData<Int>
 ) {
+    loadingState.postValue(1)
     SubnetDevices.fromLocalAddress().findDevices(object : SubnetDevices.OnSubnetDeviceFound {
         override fun onDeviceFound(device: Device?) {
             if (detectProgress.intValue < 100) {
+                if (loadingState.value == 1) {
+                    loadingState.postValue(2)
+                }
                 detectProgress.intValue += 1
             }
         }
 
         override fun onFinished(devicesFound: ArrayList<Device?>?) {
             if (devicesFound == null) {
+                loadingState.postValue(5)
                 return
             }
             // 并发检测每个IP的类型
             val threads = mutableListOf<Thread>()
             for (dev in devicesFound) {
                 val t = Thread {
+                    loadingState.postValue(3)
                     val wifiDevice = WifiHelper.detectDeviceType(dev!!, localIp)
                     if (wifiDevice.riskLevel > 0) {
                         suspiciousDevices.add(wifiDevice)
@@ -161,11 +201,12 @@ private fun wifiDetect(
                     threads.removeAll { !it.isAlive }
                 }
             }
+            loadingState.postValue(4)
             threads.forEach { it.join(3000) }
 
+            loadingState.postValue(5)
             isAnimating.value = false
             detectProgress.intValue = 100
         }
-
     })
 }
