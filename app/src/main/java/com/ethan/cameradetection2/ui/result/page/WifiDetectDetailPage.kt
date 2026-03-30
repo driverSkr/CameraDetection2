@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,11 +32,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
+import com.ethan.cameradetection2.model.WifiDevice
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
-fun WifiDetectDetailPage() {
+fun WifiDetectDetailPage(device: WifiDevice?) {
     val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
@@ -73,7 +73,7 @@ fun WifiDetectDetailPage() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("Online now", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("Yes", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(if (device?.connected == true) "Yes" else "No", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(25.dp))
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -81,7 +81,7 @@ fun WifiDetectDetailPage() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("Type", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("Camera", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(device?.type ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(25.dp))
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -89,7 +89,7 @@ fun WifiDetectDetailPage() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("IP", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("123.123.123.123", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(device?.ip ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
