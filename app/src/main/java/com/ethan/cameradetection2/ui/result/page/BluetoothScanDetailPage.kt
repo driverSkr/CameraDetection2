@@ -32,13 +32,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
+import com.ethan.cameradetection2.model.BluetoothDevice
 import com.ethan.cameradetection2.theme.White
 import com.ethan.cameradetection2.ui.camera.CameraScannerActivity
 import com.ethan.cameradetection2.ui.magnetic.MagneticFieldActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
-fun BluetoothScanDetailPage() {
+fun BluetoothScanDetailPage(device: BluetoothDevice?) {
     val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
@@ -74,7 +75,7 @@ fun BluetoothScanDetailPage() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("Online now", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("Yes", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(if (device?.connected == true) "Yes" else "No", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(25.dp))
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -82,7 +83,7 @@ fun BluetoothScanDetailPage() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("RSSI Score", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("-10dBm", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("${device?.rssi ?: 0}dBm", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(25.dp))
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -90,7 +91,7 @@ fun BluetoothScanDetailPage() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("Type", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("Camera", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(device?.type ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(25.dp))
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -98,7 +99,7 @@ fun BluetoothScanDetailPage() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("MAC", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("123456494165", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(device?.mac ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

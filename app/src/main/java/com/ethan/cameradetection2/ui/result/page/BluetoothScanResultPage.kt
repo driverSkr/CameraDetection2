@@ -29,11 +29,10 @@ import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.BluetoothDevice
 import com.ethan.cameradetection2.theme.Green
-import com.ethan.cameradetection2.theme.Purple40
 import com.ethan.cameradetection2.theme.White
+import com.ethan.cameradetection2.ui.bluetooth.BluetoothCamerasActivity
+import com.ethan.cameradetection2.ui.result.BluetoothScanDetailActivity
 import com.ethan.cameradetection2.ui.result.view.BluetoothInfoDevice
-import com.ethan.cameradetection2.ui.subscribe.SubscribeActivity
-import com.ethan.cameradetection2.ui.wifi.WiFiCamerasActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 import com.ethan.cameradetection2.utils.timestampToDate
 
@@ -44,13 +43,13 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
         Image(painter = painterResource(R.mipmap.img_history_record_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
-            Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp, end = 15.dp)) {
                 Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
                     context.findBaseActivityVBind()?.finish()
                 })
                 Text("Bluetooth Cameras", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
                 Image(painter = painterResource(R.drawable.svg_retry_with_bg), contentDescription = null, modifier = Modifier.align(Alignment.CenterEnd).clickable{
-                    WiFiCamerasActivity.launch(context)
+                    BluetoothCamerasActivity.launch(context)
                 })
             }
 
@@ -82,7 +81,9 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
 
                 suspiciousDevices?.let {
                     items(it.size) { index ->
-                        BluetoothInfoDevice(it[index])
+                        BluetoothInfoDevice(it[index]) {
+                            BluetoothScanDetailActivity.launch(context, it[index])
+                        }
                     }
                 }
 
@@ -97,7 +98,9 @@ fun BluetoothScanResultPage(suspiciousDevices: List<BluetoothDevice>?, trustedDe
 
                 trustedDevices?.let {
                     items(it.size) { index ->
-                        BluetoothInfoDevice(it[index])
+                        BluetoothInfoDevice(it[index]) {
+                            BluetoothScanDetailActivity.launch(context, it[index])
+                        }
                     }
                 }
             }

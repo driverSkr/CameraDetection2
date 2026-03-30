@@ -8,20 +8,25 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import com.ethan.cameradetection2.base.BaseActivityVBind
 import com.ethan.cameradetection2.databinding.LayoutComposeContainerBinding
+import com.ethan.cameradetection2.model.BluetoothDevice
 import com.ethan.cameradetection2.theme.ComposeProjectTheme
 import com.ethan.cameradetection2.theme.Transparent
 import com.ethan.cameradetection2.ui.result.page.BluetoothScanDetailPage
+import com.skydoves.bundler.bundle
 import com.skydoves.bundler.intentOf
 
 class BluetoothScanDetailActivity: BaseActivityVBind<LayoutComposeContainerBinding>() {
 
     companion object {
-        fun launch(context: Context) {
+        fun launch(context: Context, device: BluetoothDevice) {
             context.intentOf<BluetoothScanDetailActivity> {
+                +("device" to device)
                 startActivity(context)
             }
         }
     }
+
+    private val device by bundle<BluetoothDevice>("device")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +35,7 @@ class BluetoothScanDetailActivity: BaseActivityVBind<LayoutComposeContainerBindi
                 CompositionLocalProvider {
                     ComposeProjectTheme {
                         Surface(modifier = Modifier.fillMaxSize(), color = Transparent) {
-                            BluetoothScanDetailPage()
+                            BluetoothScanDetailPage(device)
                         }
                     }
                 }

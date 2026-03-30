@@ -21,11 +21,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,12 +37,14 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.MutableLiveData
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.BluetoothDevice
 import com.ethan.cameradetection2.ui.bluetooth.view.RadarScannerWithControls3
@@ -57,8 +63,11 @@ fun BluetoothCamerasPage() {
         bluetoothAdapter?.address ?: ""
     }
 
+    val loadingState = remember { MutableLiveData(0) }
+    val currentLoadingState by loadingState.observeAsState(0)
+
     LaunchedEffect(Unit) {
-        startBluetoothScan(context, isAnimating, localBluetoothMac, suspiciousDevices, trustedDevices)
+        startBluetoothScan(context, isAnimating, localBluetoothMac, suspiciousDevices, trustedDevices, loadingState)
     }
 
     LaunchedEffect(isAnimating.value) {
@@ -94,47 +103,71 @@ fun BluetoothCamerasPage() {
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Camera Detector Ready...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 1) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Detecting Suspicious Devices...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 2) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Analyzing Device Ports...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 3) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Identifying Camera...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 4) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Collate Detection Results...", color = Color(0xFF152946), fontSize = 14.sp)
             Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            if (currentLoadingState >= 5) {
+                Image(painter = painterResource(R.drawable.svg_selected), contentDescription = null)
+            } else {
+                CircularProgressIndicator(color = Color(0xFF152946), trackColor = Color(0xFF152946).copy(0.3f), strokeWidth = 1.5.dp, strokeCap = StrokeCap.Round, modifier = Modifier.size(16.dp))
+            }
         }
     }
 }
 
-private fun startBluetoothScan(context: Context, isAnimating: MutableState<Boolean>, localBluetoothMac: String, suspiciousDevices: SnapshotStateList<BluetoothDevice>, trustedDevices: SnapshotStateList<BluetoothDevice>) {
+private fun startBluetoothScan(context: Context, isAnimating: MutableState<Boolean>, localBluetoothMac: String, suspiciousDevices: SnapshotStateList<BluetoothDevice>, trustedDevices: SnapshotStateList<BluetoothDevice>, loadingState: MutableLiveData<Int>) {
     val handler = Handler(Looper.getMainLooper())
     val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     val bluetoothAdapter = manager.adapter
     val leScanner = bluetoothAdapter!!.bluetoothLeScanner
     suspiciousDevices.clear()
     trustedDevices.clear()
+    loadingState.postValue(1)
     addMine(bluetoothAdapter, trustedDevices)
+    loadingState.postValue(2)
     // 经典蓝牙
     scanClassicBluetooth(context, handler, bluetoothAdapter, localBluetoothMac, suspiciousDevices, trustedDevices)
+    loadingState.postValue(3)
     // BLE
     scanLeBluetooth(context, handler, leScanner, localBluetoothMac, suspiciousDevices, trustedDevices)
+    loadingState.postValue(5)
     // 定时停止
     handler.postDelayed({
         try {
@@ -144,6 +177,7 @@ private fun startBluetoothScan(context: Context, isAnimating: MutableState<Boole
         // todo 保存到本地
         // todo 跳转
         isAnimating.value = false
+        loadingState.postValue(5)
     }, 12000L)
 }
 

@@ -73,10 +73,6 @@ fun WiFiCamerasPage() {
         wifiDetect(localIp, suspiciousDevices, trustedDevices, isAnimating, detectProgress, loadingState)
     }
 
-    LaunchedEffect(currentLoadingState) {
-        Log.i("进度状态", "$currentLoadingState")
-    }
-
     LaunchedEffect(isAnimating.value) {
         if (!isAnimating.value && detectProgress.intValue == 100) {
             val suspiciousDevicesList = ArrayList(suspiciousDevices.toList())
