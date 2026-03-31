@@ -3,6 +3,7 @@ package com.ethan.cameradetection2.ui.history.view
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,23 +25,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
+import com.ethan.cameradetection2.model.DetectWifiDevice
 import com.ethan.cameradetection2.theme.White
+import com.ethan.cameradetection2.utils.timestampToDate
+import com.ethan.cameradetection2.utils.timestampToDateSS
 
 @Composable
-fun HistoryRecordItemView(item: Triple<String, String, Int>) {
+fun WifiRecordItemView(detect: DetectWifiDevice, clickable: () -> Unit) {
     Row(modifier = Modifier
+        .clickable{ clickable.invoke() }
         .fillMaxWidth()
         .border(width = 1.dp, color = Color(0x145874FF), shape = RoundedCornerShape(10.dp))
         .background(color = White, shape = RoundedCornerShape(10.dp))
         .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(painter = painterResource(if (item.third == 1) R.mipmap.img_history_wifi else R.mipmap.img_history_bluetooth), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.size(36.dp))
+        Image(painter = painterResource(R.mipmap.img_history_wifi), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.size(36.dp))
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-            Text(item.first, color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(detect.createTime.toInt().timestampToDateSS(), color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.weight(1f))
-            Text(item.second, color = Color(0xFF44546B), fontSize = 12.sp)
+            Text("${detect.suspiciousDevices.size} Suspected Devices", color = Color(0xFF44546B), fontSize = 12.sp)
         }
         Image(painter = painterResource(R.drawable.svg_next), contentDescription = null)
     }

@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,18 +28,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethan.cameradetection2.R
-import com.ethan.cameradetection2.ui.history.view.HistoryRecordItemView
+import com.ethan.cameradetection2.model.DetectBluetoothDevice
+import com.ethan.cameradetection2.model.DetectWifiDevice
+import com.ethan.cameradetection2.room.DetectDataBase
+import com.ethan.cameradetection2.ui.history.view.BluetoothRecordItemView
+import com.ethan.cameradetection2.ui.history.view.WifiRecordItemView
+import com.ethan.cameradetection2.ui.result.BluetoothScanResultActivity
+import com.ethan.cameradetection2.ui.result.WifiDetectResultActivity
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 
 @Composable
 fun HistoryRecordPage() {
     val context = LocalContext.current
-    val list = listOf(
-        Triple("2025-10-01 12:12:12", "3 Cameras", 1),
-        Triple("2025-10-01 12:12:12", "99 Suspected Devices", 2),
-        Triple("2025-10-01 12:12:12", "3 Cameras", 1),
-        Triple("2025-10-01 12:12:12", "99 Suspected Devices", 2),
-    )
+    val wifiDetectHistory = remember { mutableStateOf<List<DetectWifiDevice>?>(null) }
+    val bluetoothDetectHistory = remember { mutableStateOf<List<DetectBluetoothDevice>?>(null) }
+
+    // 合并并排序后的历史记录
+    val sortedHistory = remember(wifiDetectHistory.value, bluetoothDetectHistory.value) {
+        val allRecords = mutableListOf<HistoryRecord>()
+
+        wifiDetectHistory.value?.forEach { wifiDevice ->
+            allRecords.add(HistoryRecord.Wifi(wifiDevice))
+        }
+
+        bluetoothDetectHistory.value?.forEach { bluetoothDevice ->
+            allRecords.add(HistoryRecord.Bluetooth(bluetoothDevice))
+        }
+
+        allRecords.sortedByDescending { it.createTime }
+    }
+
+    LaunchedEffect(Unit) {
+        wifiDetectHistory.value = DetectDataBase.invoke(context).getWifiDao().getAllDevice()
+        bluetoothDetectHistory.value = DetectDataBase.invoke(context).getBluetoothDao().getAllDevice()
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(painter = painterResource(R.mipmap.img_history_record_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
@@ -50,7 +75,7 @@ fun HistoryRecordPage() {
 
             Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
                 Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("99", color = Color(0xFF5874FF), fontSize = 50.sp, fontWeight = FontWeight.Bold)
+                    Text("${sortedHistory.size}", color = Color(0xFF5874FF), fontSize = 50.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text("Cumulative Detections", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
@@ -60,10 +85,34 @@ fun HistoryRecordPage() {
                 contentPadding = PaddingValues(horizontal = 15.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(list.size) {
-                    HistoryRecordItemView(list[it])
+                items(sortedHistory.size) { index ->
+                    when (val record = sortedHistory[index]) {
+                        is HistoryRecord.Wifi -> {
+                            WifiRecordItemView(record.device) {
+                                WifiDetectResultActivity.launch(context, record.device.suspiciousDevices, record.device.trustedDevices)
+                            }
+                        }
+                        is HistoryRecord.Bluetooth -> {
+                            BluetoothRecordItemView(record.device) {
+                                BluetoothScanResultActivity.launch(context, record.device.suspiciousDevices, record.device.trustedDevices)
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+// 密封类来表示不同类型的记录
+sealed class HistoryRecord {
+    abstract val createTime: Long
+
+    data class Wifi(val device: DetectWifiDevice) : HistoryRecord() {
+        override val createTime: Long get() = device.createTime
+    }
+
+    data class Bluetooth(val device: DetectBluetoothDevice) : HistoryRecord() {
+        override val createTime: Long get() = device.createTime
     }
 }

@@ -2,7 +2,6 @@ package com.ethan.cameradetection2.ui.wifi.page
 
 import android.content.Context
 import android.net.wifi.WifiManager
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,9 +39,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.MutableLiveData
 import com.ethan.cameradetection2.R
+import com.ethan.cameradetection2.model.DetectWifiDevice
 import com.ethan.cameradetection2.model.WifiDevice
+import com.ethan.cameradetection2.room.DetectDataBase
 import com.ethan.cameradetection2.ui.result.WifiDetectResultActivity
 import com.ethan.cameradetection2.ui.wifi.view.RadarScannerWithControls2
+import com.ethan.cameradetection2.ui.wifi.view.RandomRedDotsWithVisibility
 import com.ethan.cameradetection2.utils.WifiHelper
 import com.ethan.cameradetection2.utils.findBaseActivityVBind
 import com.stealthcopter.networktools.SubnetDevices
@@ -77,6 +79,7 @@ fun WiFiCamerasPage() {
         if (!isAnimating.value && detectProgress.intValue == 100) {
             val suspiciousDevicesList = ArrayList(suspiciousDevices.toList())
             val trustedDevicesList = ArrayList(trustedDevices.toList())
+            DetectDataBase.invoke(context).getWifiDao().addDevice(DetectWifiDevice(suspiciousDevices = suspiciousDevices, trustedDevices = trustedDevices))
             WifiDetectResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList)
             context.findBaseActivityVBind()?.finish()
         }
@@ -93,6 +96,7 @@ fun WiFiCamerasPage() {
         Spacer(modifier = Modifier.height(20.dp))
         Box(modifier = Modifier.fillMaxWidth().height(360.dp)) {
             RadarScannerWithControls2(isAnimating)
+            RandomRedDotsWithVisibility(modifier = Modifier.align(Alignment.Center), isAnimating = isAnimating)
             Row(modifier = Modifier.align(Alignment.BottomCenter), verticalAlignment = Alignment.CenterVertically) {
                 Text("Found Devices:", color = Color(0xFF152946), fontSize = 16.sp)
                 Text("${suspiciousDevices.size + trustedDevices.size}", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold)

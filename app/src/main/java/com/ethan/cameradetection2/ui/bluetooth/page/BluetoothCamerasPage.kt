@@ -47,6 +47,8 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.MutableLiveData
 import com.ethan.cameradetection2.R
 import com.ethan.cameradetection2.model.BluetoothDevice
+import com.ethan.cameradetection2.model.DetectBluetoothDevice
+import com.ethan.cameradetection2.room.DetectDataBase
 import com.ethan.cameradetection2.ui.bluetooth.view.RadarScannerWithControls3
 import com.ethan.cameradetection2.ui.result.BluetoothScanResultActivity
 import com.ethan.cameradetection2.utils.BluetoothHelper
@@ -74,6 +76,7 @@ fun BluetoothCamerasPage() {
         if (!isAnimating.value) {
             val suspiciousDevicesList = ArrayList(suspiciousDevices.toList())
             val trustedDevicesList = ArrayList(trustedDevices.toList())
+            DetectDataBase.invoke(context).getBluetoothDao().addDevice(DetectBluetoothDevice(suspiciousDevices = suspiciousDevices, trustedDevices = trustedDevices))
             BluetoothScanResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList)
             context.findBaseActivityVBind()?.finish()
         }
