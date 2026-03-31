@@ -58,7 +58,7 @@ fun BluetoothScanDetailPage(device: BluetoothDevice?) {
                 Image(painter = painterResource(R.drawable.svg_red_light), contentDescription = null, modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp))
             }
             Spacer(modifier = Modifier.height(15.dp))
-            Text("Device Name", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(device?.name ?: "Unknown", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(40.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
