@@ -1,7 +1,6 @@
 package com.findhiddencamera.spycameralocator.ui.home.page
 
 import android.Manifest
-import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,36 +51,70 @@ import com.findhiddencamera.spycameralocator.ui.setting.SettingActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.SplashScreenSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.SubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.WiFiCamerasActivity
+import com.findhiddencamera.spycameralocator.utils.AppPermissionHelper
 import com.findhiddencamera.spycameralocator.utils.BluetoothHelper
 import com.findhiddencamera.spycameralocator.utils.DataHelper
 import com.findhiddencamera.spycameralocator.utils.WifiHelper
+import com.findhiddencamera.spycameralocator.utils.findActivity
+
+private enum class FeatureAction {
+    WIFI,
+    BLUETOOTH,
+    CAMERA
+}
 
 @Composable
 fun HomePage() {
     val context = LocalContext.current
-    val wifiPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true && (Build.VERSION.SDK_INT < 33 || permissions[Manifest.permission.NEARBY_WIFI_DEVICES] == true)
-        if (granted) {
-            Toast.makeText(context, "权限获得成功", Toast.LENGTH_LONG).show()
-        } else {
-            Toast.makeText(context, "没有权限", Toast.LENGTH_LONG).show()
+    val activity = context.findActivity()
+    var pendingAction by remember { mutableStateOf<FeatureAction?>(null) }
+
+    val wifiPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        if (pendingAction == FeatureAction.WIFI) {
+            if (WifiHelper.hasWifiPermission(context)) {
+                WiFiCamerasActivity.launch(context)
+            } else if (activity != null && AppPermissionHelper.shouldOpenSettings(
+                    activity,
+                    WifiHelper.requiredPermissions()
+                )
+            ) {
+                AppPermissionHelper.openAppPermissionSettings(activity)
+            }
         }
+        pendingAction = null
     }
 
-    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-        val allGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12+ 检查所有蓝牙权限
-            permissions[Manifest.permission.BLUETOOTH_SCAN] == true && permissions[Manifest.permission.BLUETOOTH_CONNECT] == true
-        } else {
-            // Android 11 及以下检查位置权限
-            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        if (pendingAction == FeatureAction.BLUETOOTH) {
+            if (BluetoothHelper.hasBluetoothPermission(context)) {
+                BluetoothCamerasActivity.launch(context)
+            } else if (activity != null && AppPermissionHelper.shouldOpenSettings(
+                    activity,
+                    BluetoothHelper.requiredPermissions()
+                )
+            ) {
+                AppPermissionHelper.openAppPermissionSettings(activity)
+            }
         }
+        pendingAction = null
+    }
 
-        if (allGranted) {
-            Toast.makeText(context, "权限获取成功", Toast.LENGTH_LONG).show()
-        } else {
-            Toast.makeText(context, "没有获得必要权限，功能受限", Toast.LENGTH_LONG).show()
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        val cameraPermission = arrayOf(Manifest.permission.CAMERA)
+        if (pendingAction == FeatureAction.CAMERA) {
+            if (AppPermissionHelper.hasPermissions(context, cameraPermission)) {
+                CameraScannerActivity.launch(context)
+            } else if (activity != null && AppPermissionHelper.shouldOpenSettings(activity, cameraPermission)) {
+                AppPermissionHelper.openAppPermissionSettings(activity)
+            }
         }
+        pendingAction = null
     }
 
     LaunchedEffect(Unit) {
@@ -87,18 +124,32 @@ fun HomePage() {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Image(painter = painterResource(R.mipmap.img_home_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(start = 15.dp, end = 15.dp, top = 12.dp)
+        Image(
+            painter = painterResource(R.mipmap.img_home_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(start = 15.dp, end = 15.dp, top = 12.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Spy Camera Locator", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
-                Image(painter = painterResource(R.mipmap.img_pro), contentScale = ContentScale.Crop, contentDescription = null, modifier = Modifier.width(61.dp).height(26.dp).clickable{
-                    SubscribeActivity.launch(context)
-                })
+                Image(
+                    painter = painterResource(R.mipmap.img_pro),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(61.dp)
+                        .height(26.dp)
+                        .clickable {
+                            SubscribeActivity.launch(context)
+                        }
+                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
                     SettingActivity.launch(context)
@@ -114,23 +165,48 @@ fun HomePage() {
                 contentPadding = PaddingValues(bottom = 15.dp)
             ) {
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth().clickable{
-                        if (WifiHelper.hasWifiPermission(context)) {
-                            WiFiCamerasActivity.launch(context)
-                        } else {
-                            WifiHelper.checkWifiPermission(context, wifiPermissionLauncher)
-                        }
-                    }) {
-                        Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (!WifiHelper.isWifiEnabled(context)) {
+                                Toast.makeText(context, "Please connect to wifi first", Toast.LENGTH_LONG).show()
+                                return@clickable
+                            }
+                            if (WifiHelper.hasWifiPermission(context)) {
+                                WiFiCamerasActivity.launch(context)
+                            } else if (activity != null) {
+                                pendingAction = FeatureAction.WIFI
+                                AppPermissionHelper.requestPermissionsOrOpenSettings(
+                                    activity,
+                                    WifiHelper.requiredPermissions(),
+                                    wifiPermissionLauncher
+                                )
+                            }
+                        }) {
+                        Image(
+                            painter = painterResource(R.mipmap.img_home_func_bg),
+                            contentScale = ContentScale.FillWidth,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
                             Text("WiFi Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
-                            Text("These cameras upload the recorded video to the Internet via Wi-Fi.", fontSize = 12.sp, color = White50, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
+                            Text(
+                                "These cameras upload the recorded video to the Internet via Wi-Fi.",
+                                fontSize = 12.sp,
+                                color = White50,
+                                lineHeight = 14.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp)
+                            )
                         }
-                        Box(modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(start = 15.dp, bottom = 15.dp)
-                            .background(color = White, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(start = 15.dp, bottom = 15.dp)
+                                .background(color = White, shape = RoundedCornerShape(8.dp))
+                                .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
@@ -138,23 +214,44 @@ fun HomePage() {
                 }
 
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth().clickable{
-                        if (BluetoothHelper.hasBluetoothPermission(context)) {
-                            BluetoothCamerasActivity.launch(context)
-                        } else {
-                            BluetoothHelper.checkBluetoothPermission(context, bluetoothPermissionLauncher)
-                        }
-                    }) {
-                        Image(painter = painterResource(R.mipmap.img_home_func_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (BluetoothHelper.hasBluetoothPermission(context)) {
+                                BluetoothCamerasActivity.launch(context)
+                            } else if (activity != null) {
+                                pendingAction = FeatureAction.BLUETOOTH
+                                AppPermissionHelper.requestPermissionsOrOpenSettings(
+                                    activity,
+                                    BluetoothHelper.requiredPermissions(),
+                                    bluetoothPermissionLauncher
+                                )
+                            }
+                        }) {
+                        Image(
+                            painter = painterResource(R.mipmap.img_home_func_bg),
+                            contentScale = ContentScale.FillWidth,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp, end = 120.dp)) {
                             Text("Bluetooth Camera", fontSize = 18.sp, color = White, fontWeight = FontWeight.Bold)
-                            Text("These cameras upload the recorded video to a nearby storage device via Bluetooth.", fontSize = 12.sp, color = White50, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
+                            Text(
+                                "These cameras upload the recorded video to a nearby storage device via Bluetooth.",
+                                fontSize = 12.sp,
+                                color = White50,
+                                lineHeight = 14.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp)
+                            )
                         }
-                        Box(modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(start = 15.dp, bottom = 15.dp)
-                            .background(color = White, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(start = 15.dp, bottom = 15.dp)
+                                .background(color = White, shape = RoundedCornerShape(8.dp))
+                                .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
@@ -162,9 +259,13 @@ fun HomePage() {
                 }
 
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp)).clickable{
-                        MagneticFieldActivity.launch(context)
-                    }) {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .background(color = White, shape = RoundedCornerShape(10.dp))
+                        .clickable {
+                            MagneticFieldActivity.launch(context)
+                        }) {
                         Column(modifier = Modifier.padding(top = 20.dp, start = 15.dp)) {
                             Text("Magnetic Field", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
                             Spacer(modifier = Modifier.height(5.dp))
@@ -173,15 +274,31 @@ fun HomePage() {
                         Image(
                             painter = painterResource(R.mipmap.img_magnetic_field),
                             contentDescription = null,
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(20.dp)
                         )
                     }
                 }
 
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(color = White, shape = RoundedCornerShape(10.dp)).clickable{
-                        CameraScannerActivity.launch(context)
-                    }) {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .background(color = White, shape = RoundedCornerShape(10.dp))
+                        .clickable {
+                            val cameraPermission = arrayOf(Manifest.permission.CAMERA)
+                            if (AppPermissionHelper.hasPermissions(context, cameraPermission)) {
+                                CameraScannerActivity.launch(context)
+                            } else if (activity != null) {
+                                pendingAction = FeatureAction.CAMERA
+                                AppPermissionHelper.requestPermissionsOrOpenSettings(
+                                    activity,
+                                    cameraPermission,
+                                    cameraPermissionLauncher
+                                )
+                            }
+                        }) {
                         Column(modifier = Modifier.padding(top = 20.dp, start = 15.dp)) {
                             Text("Infrared Camera", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
                             Spacer(modifier = Modifier.height(5.dp))
@@ -190,7 +307,9 @@ fun HomePage() {
                         Image(
                             painter = painterResource(R.mipmap.img_infrared_camera),
                             contentDescription = null,
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(20.dp)
                         )
                     }
                 }
@@ -201,7 +320,7 @@ fun HomePage() {
                         .aspectRatio(2f)
                         .background(color = White, shape = RoundedCornerShape(10.dp))
                         .padding(horizontal = 15.dp)
-                        .clickable{
+                        .clickable {
 
                         }
                     ) {
@@ -234,17 +353,23 @@ fun HomePage() {
                 }
 
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(modifier = Modifier.fillMaxWidth().clickable{ SubscribeActivity.launch(context) }) {
-                        Image(painter = painterResource(R.mipmap.img_home_sub_bg), contentScale = ContentScale.FillWidth, contentDescription = null, modifier = Modifier.fillMaxWidth())
+                    Box(modifier = Modifier.fillMaxWidth().clickable { SubscribeActivity.launch(context) }) {
+                        Image(
+                            painter = painterResource(R.mipmap.img_home_sub_bg),
+                            contentScale = ContentScale.FillWidth,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         Column(modifier = Modifier.padding(start = 15.dp, top = 15.dp)) {
-                            Text("41%OFF，Get VIP", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
+                            Text("41%OFF, Get VIP", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text("2.33 per week only", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 14.sp)
                             Spacer(modifier = Modifier.height(15.dp))
-                            Row(modifier = Modifier
-                                .height(26.dp)
-                                .background(color = Color(0xFF5672FF), shape = RoundedCornerShape(200.dp))
-                                .padding(start = 12.dp, end = 2.dp),
+                            Row(
+                                modifier = Modifier
+                                    .height(26.dp)
+                                    .background(color = Color(0xFF5672FF), shape = RoundedCornerShape(200.dp))
+                                    .padding(start = 12.dp, end = 2.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text("START", color = White, fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 14.sp)
@@ -258,3 +383,4 @@ fun HomePage() {
         }
     }
 }
+

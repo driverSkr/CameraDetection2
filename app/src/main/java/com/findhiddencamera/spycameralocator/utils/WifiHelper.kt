@@ -19,6 +19,14 @@ import java.util.concurrent.CountDownLatch
 
 object WifiHelper {
 
+    fun requiredPermissions(): Array<String> {
+        val permissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.NEARBY_WIFI_DEVICES)
+        }
+        return permissions.toTypedArray()
+    }
+
     private val commonPorts = listOf(
         22,    // TCP - PC - SSH 服务常见于 Linux/PC 系统
         23,    // TCP - Router - 老式路由器常启用 Telnet 管理
@@ -50,10 +58,7 @@ object WifiHelper {
     }
 
     fun hasWifiPermission(context: Context): Boolean {
-        val needNearby = Build.VERSION.SDK_INT >= 33
-        val hasLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val hasNearby = !needNearby || ContextCompat.checkSelfPermission(context, Manifest.permission.NEARBY_WIFI_DEVICES) == PackageManager.PERMISSION_GRANTED
-        return !(!hasNearby || !hasLocation)
+        return AppPermissionHelper.hasPermissions(context, requiredPermissions())
     }
 
     // 检测WI-FI权限

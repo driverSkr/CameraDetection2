@@ -16,17 +16,19 @@ import com.findhiddencamera.spycameralocator.R
 
 object BluetoothHelper {
 
-    fun hasBluetoothPermission(context: Context): Boolean {
+    fun requiredPermissions(): Array<String> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12+ 需要检查两个新权限
-            val hasBluetoothScan = ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
-            val hasBluetoothConnect = ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-
-            hasBluetoothScan && hasBluetoothConnect
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
         } else {
-            // Android 11 及以下只需要检查位置权限（用于扫描）
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
         }
+    }
+
+    fun hasBluetoothPermission(context: Context): Boolean {
+        return AppPermissionHelper.hasPermissions(context, requiredPermissions())
     }
 
     /**
