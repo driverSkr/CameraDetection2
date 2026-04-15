@@ -111,14 +111,7 @@ fun MagneticFieldPage() {
     // 我们需要顺时针旋转：
     // 0%时：指针朝向左下45度（从朝上顺时针旋转225度）
     // 100%时：指针朝向右下45度（从朝上顺时针旋转315度或-45度）
-    val targetRotationAngle = if (magneticGauge == 0) {
-        // 0%时：顺时针旋转225度，使指针指向左下方45度
-        225f
-    } else {
-        // 百分比值转换为角度：初始225度 + 顺时针旋转（每1%旋转0.9度）
-        // 从225度到315度总共90度的旋转范围
-        225f + (magneticGauge.toFloat() * 0.9f)
-    }
+    val targetRotationAngle = -135f + (magneticGauge.toFloat() * 0.9f)
 
     val rotationAngle by animateFloatAsState(
         targetValue = targetRotationAngle,
@@ -156,9 +149,9 @@ fun MagneticFieldPage() {
                     .offset(x = 55.dp)
                     .offset(y = (-45).dp)
                     .graphicsLayer {
-                        // 设置旋转中心为左下角 (0f, 1f)
+                        // 设置旋转中心为底部中心 (0.5f, 1f)
                         // (0,0) 是左上角，(1,1) 是右下角
-                        transformOrigin = TransformOrigin(0f, 1f)
+                        transformOrigin = TransformOrigin(0.5f, 1f)
                         rotationZ = rotationAngle
                     },
                 contentDescription = null
