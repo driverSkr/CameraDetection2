@@ -110,6 +110,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation 'androidx.compose.runtime:runtime-livedata'
+
+    implementation 'androidx.multidex:multidex:2.0.1'
     //================================compose dependencies area==============================
     implementation "com.blankj:utilcode:${UTILS_VERSION}"
     implementation "com.github.skydoves:bundler:1.0.4"

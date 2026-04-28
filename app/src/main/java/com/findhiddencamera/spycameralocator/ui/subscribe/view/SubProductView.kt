@@ -17,13 +17,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ethan.pay.utils.SubHelper
+import com.findhiddencamera.spycameralocator.model.SubModel
 import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.theme.White30
 import com.findhiddencamera.spycameralocator.theme.White5
 import com.findhiddencamera.spycameralocator.theme.White50
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 
 @Composable
-fun SubscribeItemView(modifier: Modifier = Modifier, product: Triple<String, String, String>, isSelected: Boolean, onClick: () -> Unit) {
+fun SubProductView(modifier: Modifier = Modifier, isSelected: Boolean, model: SubModel, onClick: () -> Unit) {
 
     Box(modifier = modifier
         .height(156.dp)
@@ -33,7 +36,8 @@ fun SubscribeItemView(modifier: Modifier = Modifier, product: Triple<String, Str
         )
         .clickable{ onClick.invoke() }
     ) {
-        Text(product.third, color = White50, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp))
+        // todo 折扣需要再计算
+        Text("41% OFF", color = White50, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp))
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -44,14 +48,15 @@ fun SubscribeItemView(modifier: Modifier = Modifier, product: Triple<String, Str
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(12.dp))
-            Text(product.first, color = White50, fontSize = 14.sp, fontWeight = FontWeight.W400)
+            Text(SubscribeHelper.getProductType(model.id), color = White50, fontSize = 14.sp, fontWeight = FontWeight.W400)
             Spacer(modifier = Modifier.weight(1f))
-            Text(product.second, color = White, fontSize = 16.sp, fontWeight = FontWeight.W500)
+            Text("${model.currency}${model.price}${SubscribeHelper.getProductType2(model.id)}", color = White, fontSize = 16.sp, fontWeight = FontWeight.W500)
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = when(product.first) {
-                    "Monthly" -> "2.33/week"
-                    "Yearly" -> "0.48/week"
+                // todo 价格计算
+                text = when(model.id) {
+                    SubHelper.getMonthPlanId()  -> "2.33/week"
+                    SubHelper.getYearPlanId() -> "0.48/week"
                     else -> ""
                 } ,
                 color = White30, fontSize = 12.sp, fontWeight = FontWeight.W400
