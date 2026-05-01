@@ -16,6 +16,7 @@ import com.stealthcopter.networktools.PortScan
 import com.stealthcopter.networktools.subnet.Device
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 object WifiHelper {
 
@@ -109,7 +110,8 @@ object WifiHelper {
                         latch.countDown()
                     }
                 })
-            latch.await()
+            // 部分设备可能不会回调端口扫描完成，避免单个 IP 卡住整个结果页。
+            latch.await(2500L, TimeUnit.MILLISECONDS)
         }
 
         // 名称或类型检测不到，标题只显示Unknown

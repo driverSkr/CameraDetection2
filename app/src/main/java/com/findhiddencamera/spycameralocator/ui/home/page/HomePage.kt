@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -327,8 +328,9 @@ fun HomePage() {
                         Text("How it works", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
                         Image(
                             painter = painterResource(R.drawable.svg_question),
+                            contentScale = ContentScale.Crop,
                             contentDescription = null,
-                            modifier = Modifier.align(Alignment.CenterEnd)
+                            modifier = Modifier.align(Alignment.CenterEnd).size(24.dp)
                         )
                     }
                 }
@@ -346,8 +348,9 @@ fun HomePage() {
                         Text("Detection history", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
                         Image(
                             painter = painterResource(R.drawable.svg_detection_history),
+                            contentScale = ContentScale.Crop,
                             contentDescription = null,
-                            modifier = Modifier.align(Alignment.CenterEnd)
+                            modifier = Modifier.align(Alignment.CenterEnd).size(24.dp)
                         )
                     }
                 }
