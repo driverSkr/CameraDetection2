@@ -23,6 +23,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,6 +70,7 @@ import com.findhiddencamera.spycameralocator.model.DetectBluetoothDevice
 import com.findhiddencamera.spycameralocator.room.DetectDataBase
 import com.findhiddencamera.spycameralocator.ui.bluetooth.view.RadarScannerWithControls3
 import com.findhiddencamera.spycameralocator.ui.result.BluetoothScanResultActivity
+import com.findhiddencamera.spycameralocator.ui.wifi.view.RandomRedDotsWithVisibility
 import com.findhiddencamera.spycameralocator.utils.BluetoothHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import kotlinx.coroutines.delay
@@ -208,17 +210,25 @@ fun BluetoothCamerasPage() {
 
         Spacer(modifier = Modifier.height(26.dp))
 
-        Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Box(
                 modifier = Modifier
-                    .size(248.dp)
-                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
             ) {
                 RadarScannerWithControls3(isAnimating)
+                RandomRedDotsWithVisibility(
+                    modifier = Modifier.align(Alignment.Center),
+                    isAnimating = isAnimating
+                )
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
-                modifier = Modifier.align(Alignment.BottomCenter),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Found Devices: ", color = Color(0xFF152946), fontSize = 16.sp)

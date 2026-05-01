@@ -10,6 +10,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -209,11 +210,14 @@ fun WiFiCamerasPage() {
 
         Spacer(modifier = Modifier.height(26.dp))
 
-        Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Box(
                 modifier = Modifier
-                    .size(248.dp)
-                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
             ) {
                 RadarScannerWithControls2(isAnimating)
                 RandomRedDotsWithVisibility(
@@ -222,8 +226,9 @@ fun WiFiCamerasPage() {
                 )
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
-                modifier = Modifier.align(Alignment.BottomCenter),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Found Devices: ", color = Color(0xFF152946), fontSize = 16.sp)

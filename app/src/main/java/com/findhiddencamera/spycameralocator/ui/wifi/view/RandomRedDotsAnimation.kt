@@ -8,6 +8,10 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -28,121 +32,117 @@ import androidx.compose.ui.unit.dp
 import com.findhiddencamera.spycameralocator.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.collections.forEach
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 @Composable
 fun RandomRedDotsWithVisibility(
     modifier: Modifier = Modifier,
     maxDots: Int = 5,
-    areaWidth: Dp = 248.dp,
-    areaHeight: Dp = 248.dp,
     isAnimating: MutableState<Boolean>
 ) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
 
-    // 存储可见的红点
+    // 记录当前显示中的红点，扫描停止时会统一清空。
     val visibleDots = remember { mutableStateListOf<DotInfo>() }
 
-    // 添加新红点的逻辑 - 依赖 isAnimating 状态
-    LaunchedEffect(isAnimating.value) {
-        // 如果停止动画，清空所有红点
-        if (!isAnimating.value) {
-            visibleDots.clear()
-            return@LaunchedEffect
-        }
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+    ) {
+        val areaWidth = maxWidth
+        val areaHeight = maxHeight
 
-        // 如果开始动画，启动循环
-        while (isAnimating.value) {
-            if (visibleDots.size < maxDots) {
-                with(density) {
-                    // 先转换为像素进行计算
-                    val areaWidthPx = areaWidth.toPx()
-                    val areaHeightPx = areaHeight.toPx()
+        LaunchedEffect(isAnimating.value, areaWidth, areaHeight) {
+            if (!isAnimating.value) {
+                visibleDots.clear()
+                return@LaunchedEffect
+            }
 
-                    // 随机大小（8-20dp）
-//                    val dotSize = (8 + Random.nextInt(13)).dp
-                    // 固定大小
-                    val dotSize = 8.dp
-                    val dotSizePx = dotSize.toPx()
+            while (isAnimating.value) {
+                if (visibleDots.size < maxDots) {
+                    with(density) {
+                        val areaWidthPx = areaWidth.toPx()
+                        val areaHeightPx = areaHeight.toPx()
+                        val dotSize = 8.dp
+                        val dotSizePx = dotSize.toPx()
 
-                    // 确保红点完全在区域内
-                    val maxX = areaWidthPx - dotSizePx
-                    val maxY = areaHeightPx - dotSizePx
+                        // 雷达是圆形视觉区域，所以红点也限制在圆内随机，避免出现在方形容器四角。
+                        val centerX = areaWidthPx / 2f
+                        val centerY = areaHeightPx / 2f
+                        val radius = min(areaWidthPx, areaHeightPx) / 2f - dotSizePx
 
-                    // 确保范围有效
-                    if (maxX > 0 && maxY > 0) {
-                        val xPx = Random.nextFloat() * maxX
-                        val yPx = Random.nextFloat() * maxY
+                        if (radius > 0f) {
+                            val angle = Random.nextDouble(0.0, PI * 2.0)
+                            val distance = sqrt(Random.nextDouble()) * radius
+                            val xPx = centerX + (cos(angle) * distance).toFloat() - dotSizePx / 2f
+                            val yPx = centerY + (sin(angle) * distance).toFloat() - dotSizePx / 2f
 
-                        val dotInfo = DotInfo(
-                            id = System.currentTimeMillis(),
-                            x = xPx.toDp(),
-                            y = yPx.toDp(),
-                            size = dotSize,
-                            duration = 1000L + Random.nextLong(3000L)
-                        )
+                            val dotInfo = DotInfo(
+                                id = System.currentTimeMillis() + Random.nextLong(10_000L),
+                                x = xPx.toDp(),
+                                y = yPx.toDp(),
+                                size = dotSize,
+                                duration = 1000L + Random.nextLong(3000L)
+                            )
 
-                        visibleDots.add(dotInfo)
+                            visibleDots.add(dotInfo)
 
-                        // 在单独的协程中处理消失
-                        scope.launch {
-                            delay(dotInfo.duration)
-                            // 检查是否仍在动画状态
-                            if (isAnimating.value) {
-                                visibleDots.remove(dotInfo)
+                            scope.launch {
+                                delay(dotInfo.duration)
+                                if (isAnimating.value) {
+                                    visibleDots.remove(dotInfo)
+                                }
                             }
                         }
                     }
                 }
+
+                if (!isAnimating.value) break
+
+                delay(500L + Random.nextLong(1500L))
             }
-
-            // 检查是否仍在动画状态
-            if (!isAnimating.value) break
-
-            delay(500L + Random.nextLong(1500L))
         }
-    }
 
-    Box(modifier = modifier.size(areaWidth, areaHeight)) {
-        visibleDots.forEach { dotInfo ->
-            var isVisible by remember(dotInfo.id) { mutableStateOf(true) }
+        Box(modifier = Modifier.fillMaxSize()) {
+            visibleDots.forEach { dotInfo ->
+                var isVisible by remember(dotInfo.id) { mutableStateOf(true) }
 
-            // 在消失前触发隐藏动画 - 依赖 isAnimating 状态
-            LaunchedEffect(dotInfo.id, isAnimating.value) {
-                // 如果停止动画，立即隐藏
-                if (!isAnimating.value) {
-                    isVisible = false
-                    return@LaunchedEffect
+                LaunchedEffect(dotInfo.id, isAnimating.value) {
+                    if (!isAnimating.value) {
+                        isVisible = false
+                        return@LaunchedEffect
+                    }
+
+                    delay(dotInfo.duration - 500)
+                    if (isAnimating.value) {
+                        isVisible = false
+                    }
                 }
 
-                delay(dotInfo.duration - 500) // 提前500ms开始消失
-                // 检查是否仍在动画状态
-                if (isAnimating.value) {
-                    isVisible = false
-                }
-            }
-
-            // 控制AnimatedVisibility的显示状态
-            val shouldShow = isVisible && isAnimating.value
-
-            AnimatedVisibility(
-                visible = shouldShow,
-                enter = fadeIn(animationSpec = tween(500)) +
+                AnimatedVisibility(
+                    visible = isVisible && isAnimating.value,
+                    enter = fadeIn(animationSpec = tween(500)) +
                         scaleIn(initialScale = 0.5f, animationSpec = tween(500)),
-                exit = fadeOut(animationSpec = tween(500)) +
+                    exit = fadeOut(animationSpec = tween(500)) +
                         scaleOut(targetScale = 0.5f, animationSpec = tween(500)),
-                modifier = Modifier
-                    .size(dotInfo.size)
-                    .offset(dotInfo.x, dotInfo.y)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.svg_position),
-                    modifier = Modifier.matchParentSize(),
-                    contentScale = ContentScale.Fit,
-                    contentDescription = null
-                )
+                    modifier = Modifier
+                        .size(dotInfo.size)
+                        .offset(dotInfo.x, dotInfo.y)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.svg_position),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.matchParentSize()
+                    )
+                }
             }
         }
     }
