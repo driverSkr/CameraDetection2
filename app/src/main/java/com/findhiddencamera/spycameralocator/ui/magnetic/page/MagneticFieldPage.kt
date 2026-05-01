@@ -49,6 +49,15 @@ import com.findhiddencamera.spycameralocator.theme.White50
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import kotlin.math.sqrt
 
+// 仪表盘刻度从左下角开始，顺时针扫到右下角，总跨度约 270 度。
+private const val GAUGE_START_ANGLE = -135f
+private const val GAUGE_SWEEP_ANGLE = 270f
+
+// 指针图片的视觉旋转中心在底部圆球中心，而不是图片底部边缘。
+// 原图尺寸为 144x297，圆球中心约在 y=224.5px，所以这里按比例设置旋转锚点。
+private const val POINTER_PIVOT_X = 0.5f
+private const val POINTER_PIVOT_Y = 224.5f / 297f
+
 @Composable
 fun MagneticFieldPage() {
     val context = LocalContext.current
@@ -65,18 +74,19 @@ fun MagneticFieldPage() {
                         val y = it.values[1]
                         val z = it.values[2]
 
-                        // 计算磁场强度（微特斯拉）
+                        // 计算三轴磁场强度，并归一化成仪表盘 0-100 的显示值。
                         val magnitude = sqrt(x * x + y * y + z * z)
 
-                        // 将磁场强度转换为0-100的百分比值
-                        // 地球磁场通常在25-65 μT之间，我们设置一个合理的范围
                         val normalizedValue = when {
-                            magnitude < 20 -> 0 // 低于20 μT认为是异常低
-                            magnitude > 1000 -> 100 // 高于200 μT认为是强磁场
-                            else -> ((magnitude - 20) / (1000 - 20) * 100).toInt()
+                            magnitude < 20f -> 0
+                            magnitude > 1000f -> 100
+                            else -> (((magnitude - 20f) / (1000f - 20f)) * 100f).toInt()
                         }
 
-                        Log.e("SensorPage", "磁场强度：${magnitude.toInt()} μT，百分比：$normalizedValue%")
+                        Log.e(
+                            "SensorPage",
+                            "Magnetic field: ${magnitude.toInt()} uT, gauge: $normalizedValue%"
+                        )
 
                         magneticGauge = normalizedValue
                     }
@@ -87,7 +97,6 @@ fun MagneticFieldPage() {
         }
     }
 
-    // 根据isListening状态注册或取消注册传感器监听
     DisposableEffect(Unit) {
         if (magneticSensor != null) {
             sensorManager.registerListener(
@@ -95,23 +104,20 @@ fun MagneticFieldPage() {
                 magneticSensor,
                 SensorManager.SENSOR_DELAY_NORMAL
             )
-            Log.d("SensorPage", "开始监听磁场传感器")
+            Log.d("SensorPage", "Start listening to magnetic field sensor")
         }
 
         onDispose {
             if (magneticSensor != null) {
                 sensorManager.unregisterListener(magneticSensorListener, magneticSensor)
-                Log.d("SensorPage", "停止监听磁场传感器")
+                Log.d("SensorPage", "Stop listening to magnetic field sensor")
             }
         }
     }
 
-    // 计算旋转角度并添加动画
-    // 指针切图默认朝向上90度
-    // 我们需要顺时针旋转：
-    // 0%时：指针朝向左下45度（从朝上顺时针旋转225度）
-    // 100%时：指针朝向右下45度（从朝上顺时针旋转315度或-45度）
-    val targetRotationAngle = -135f + (magneticGauge.toFloat() * 0.9f)
+    // 将 0-100 的读数映射到 -135° 到 +135°，Compose 中正角度即顺时针旋转。
+    val normalizedGauge = magneticGauge.coerceIn(0, 100) / 100f
+    val targetRotationAngle = GAUGE_START_ANGLE + normalizedGauge * GAUGE_SWEEP_ANGLE
 
     val rotationAngle by animateFloatAsState(
         targetValue = targetRotationAngle,
@@ -122,18 +128,36 @@ fun MagneticFieldPage() {
         label = "pointerRotation"
     )
 
+    val pointerWidth = 48.dp
+    val pointerHeight = 99.dp
+
+    // Image 默认以自身中心点对齐到父容器中心，这里把图片向上挪一点，
+    // 让“圆球中心”而不是“图片中心”落在仪表盘中心。
+    val pointerPivotOffsetY = (pointerHeight.value * (0.5f - POINTER_PIVOT_Y)).dp
+
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF8095FF)).statusBarsPadding()) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp)) {
-            Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
-                context.findBaseActivityVBind()?.finish()
-            })
-            Text("Magnetometer", color = White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+            Image(
+                painter = painterResource(R.drawable.svg_back),
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.CenterStart).clickable {
+                    context.findBaseActivityVBind()?.finish()
+                }
+            )
+            Text(
+                "Magnetometer",
+                color = White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
 
-        Box(modifier = Modifier
-            .size(280.dp)
-            .align(Alignment.Center)
-            .offset(y = (-60).dp)
+        Box(
+            modifier = Modifier
+                .size(280.dp)
+                .align(Alignment.Center)
+                .offset(y = (-60).dp)
         ) {
             Image(
                 painter = painterResource(R.mipmap.img_circular_arc_2),
@@ -146,34 +170,59 @@ fun MagneticFieldPage() {
                 painter = painterResource(R.mipmap.img_circular_pointer_2),
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(x = 55.dp)
-                    .offset(y = (-45).dp)
+                    .size(width = pointerWidth, height = pointerHeight)
+                    .offset(y = pointerPivotOffsetY)
                     .graphicsLayer {
-                        // 设置旋转中心为底部中心 (0.5f, 1f)
-                        // (0,0) 是左上角，(1,1) 是右下角
-                        transformOrigin = TransformOrigin(0.5f, 1f)
+                        transformOrigin = TransformOrigin(POINTER_PIVOT_X, POINTER_PIVOT_Y)
                         rotationZ = rotationAngle
                     },
+                contentScale = ContentScale.Fit,
                 contentDescription = null
             )
 
-            Box(modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = 17.dp)
-                .width(134.dp)
-                .height(66.dp)
-                .background(color = Color(0xFFF5D836), shape = RoundedCornerShape(35.dp))
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = 17.dp)
+                    .width(134.dp)
+                    .height(66.dp)
+                    .background(color = Color(0xFFF5D836), shape = RoundedCornerShape(35.dp))
             ) {
-                Text("$magneticGauge", color = Color(0xFF152946), fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                Text(
+                    "$magneticGauge",
+                    color = Color(0xFF152946),
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
         }
 
-        Column(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 50.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(painter = painterResource(R.mipmap.img_magnetic_icon), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.size(60.dp))
+        Column(
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 50.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(R.mipmap.img_magnetic_icon),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(60.dp)
+            )
             Spacer(modifier = Modifier.height(10.dp))
-            Text("Detecting magnetic field signal...", color = White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "Detecting magnetic field signal...",
+                color = White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(5.dp))
-            Text("A stronger signal indicates that the device is closer or transmitting data", color = White50, fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 55.dp))
+            Text(
+                "A stronger signal indicates that the device is closer or transmitting data",
+                color = White50,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 55.dp)
+            )
         }
     }
 }
