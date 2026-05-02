@@ -64,7 +64,7 @@ fun WifiDetectResultPage(
     val totalCount = devices.size
     val cameraCount = cameraDevices.size
     val hasCamera = cameraCount > 0
-    val summaryColor = if (hasCamera) Color(0xFFF53863) else Color(0xFF5874FF)
+    val summaryColor = Color(0xFFF53863)
     val scanInfoText = remember(wifiName, scanTimeText) {
         "WiFi Name:$wifiName $scanTimeText"
     }

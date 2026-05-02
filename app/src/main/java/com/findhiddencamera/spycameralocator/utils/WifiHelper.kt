@@ -82,7 +82,7 @@ object WifiHelper {
     // 检测设备类型（端口扫描+推断）
     fun detectDeviceType(dev: Device, localIp: String): WifiDevice {
         var deviceType = "Unknown"
-        var deviceName = "Unknown"
+        var deviceName = "Suspected Devices"
         var brandModel = ""
         var riskLevel = 1 // 默认全部可疑
 
@@ -178,7 +178,7 @@ object WifiHelper {
                 8888
             ) || ports.contains(10001) || ports.contains(1723) -> "WiFi Router"
             ports.contains(5353) || ports.contains(3689) -> "Apple Device"
-            else -> "Unknown"
+            else -> "Suspected Devices"
         }
     }
 

@@ -179,11 +179,11 @@ private fun WifiDevice.displayName(): String {
     val rawName = name.trim()
     return if (
         rawName.isBlank() ||
+        rawName.equals("Unknown", true) ||
         rawName.equals("Unknown Device", true) ||
-        rawName.equals("Device", true) ||
-        rawName.equals("Suspected Devices", true)
+        rawName.equals("Device", true)
     ) {
-        "Unknown"
+        "Suspected Devices"
     } else {
         rawName
     }
