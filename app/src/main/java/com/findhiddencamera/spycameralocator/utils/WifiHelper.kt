@@ -82,7 +82,7 @@ object WifiHelper {
     // 检测设备类型（端口扫描+推断）
     fun detectDeviceType(dev: Device, localIp: String): WifiDevice {
         var deviceType = "Unknown"
-        var deviceName = dev.hostname.orEmpty()
+        var deviceName = "Unknown"
         var brandModel = ""
         var riskLevel = 1 // 默认全部可疑
 
@@ -90,6 +90,7 @@ object WifiHelper {
         if (dev.ip == localIp) {
             riskLevel = 0
             deviceType = "Phone"
+            deviceName = "Phone"
         } else {
             // 端口扫描推断类型
             val detectedPorts = Collections.synchronizedList(mutableListOf<Int>())
@@ -105,21 +106,13 @@ object WifiHelper {
 
                     override fun onFinished(openPorts: java.util.ArrayList<Int>?) {
                         deviceType = analyzeDeviceTypeByPorts(detectedPorts)
+                        deviceName = analyzeDeviceNameByPorts(detectedPorts)
                         latch.countDown()
                     }
                 })
-            // 部分设备可能不会回调端口扫描完成，避免单个 IP 卡住整个结果页。
             latch.await(2500L, TimeUnit.MILLISECONDS)
         }
 
-        // 名称检测不到时，结果页统一显示疑似设备兜底文案
-        if (deviceName.isBlank() ||
-            deviceName.equals("Unknown", true) ||
-            deviceName.equals("Unknown Device", true) ||
-            deviceName.equals("Device", true)
-        ) {
-            deviceName = "Suspected Devices"
-        }
         if (deviceType.isBlank() || deviceType.equals(
                 "Unknown",
                 true
@@ -169,6 +162,22 @@ object WifiHelper {
                 8888
             ) || ports.contains(10001) || ports.contains(1723) -> "Router" // 路由器相关
             ports.contains(5353) || ports.contains(3689) -> "Apple" // Apple/Bonjour/iTunes
+            else -> "Unknown"
+        }
+    }
+
+    private fun analyzeDeviceNameByPorts(ports: List<Int>): String {
+        return when {
+            ports.contains(554) -> "Camera"
+            ports.contains(5000) -> "Web Camera"
+            ports.contains(1900) || ports.contains(49152) || ports.contains(8200) -> "Smart TV"
+            ports.contains(22) || ports.contains(139) || ports.contains(445) || ports.contains(3389) || ports.contains(
+                9100
+            ) -> "Computer"
+            ports.contains(23) || ports.contains(53) || ports.contains(80) || ports.contains(443) || ports.contains(
+                8888
+            ) || ports.contains(10001) || ports.contains(1723) -> "WiFi Router"
+            ports.contains(5353) || ports.contains(3689) -> "Apple Device"
             else -> "Unknown"
         }
     }

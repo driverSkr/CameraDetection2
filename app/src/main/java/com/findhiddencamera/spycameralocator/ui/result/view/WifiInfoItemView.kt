@@ -39,34 +39,34 @@ fun WifiInfoItemView(info: WifiDevice, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(56.dp)
             .shadow(elevation = 7.dp, shape = RoundedCornerShape(8.dp), clip = false)
             .border(width = 1.dp, color = Color(0x0D5874FF), shape = RoundedCornerShape(8.dp))
             .background(color = White, shape = RoundedCornerShape(8.dp))
             .clickable { onClick.invoke() }
-            .padding(start = 7.dp, end = 10.dp),
+            .padding(start = 10.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         DeviceTypeIcon(type = typeLabel, risk = risk)
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(10.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = info.displayName(),
                 color = Color(0xFF152946),
-                fontSize = 12.sp,
-                lineHeight = 13.sp,
+                fontSize = 14.sp,
+                lineHeight = 15.sp,
                 fontWeight = FontWeight.W600,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = info.ip,
                 color = Color(0xFF939DAA),
-                fontSize = 10.sp,
-                lineHeight = 10.sp,
+                fontSize = 12.sp,
+                lineHeight = 12.sp,
                 fontWeight = FontWeight.W400,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -92,21 +92,21 @@ private fun DeviceTypeIcon(type: String, risk: WifiRiskUi) {
 
     Box(
         modifier = Modifier
-            .size(34.dp)
+            .size(36.dp)
             .background(Color(0xFFF7F8FA), RoundedCornerShape(7.dp))
     ) {
         if (useImageWithoutTint) {
             Image(
                 painter = painterResource(iconRes),
                 contentDescription = null,
-                modifier = Modifier.align(Alignment.Center).size(30.dp)
+                modifier = Modifier.align(Alignment.Center).size(32.dp)
             )
         } else {
             Icon(
                 painter = painterResource(iconRes),
                 contentDescription = null,
                 tint = Color(0xFF152946),
-                modifier = Modifier.align(Alignment.Center).size(18.dp)
+                modifier = Modifier.align(Alignment.Center).size(20.dp)
             )
         }
         RiskLamp(
@@ -179,11 +179,11 @@ private fun WifiDevice.displayName(): String {
     val rawName = name.trim()
     return if (
         rawName.isBlank() ||
-        rawName.equals("Unknown", true) ||
         rawName.equals("Unknown Device", true) ||
-        rawName.equals("Device", true)
+        rawName.equals("Device", true) ||
+        rawName.equals("Suspected Devices", true)
     ) {
-        "Suspected Devices"
+        "Unknown"
     } else {
         rawName
     }
