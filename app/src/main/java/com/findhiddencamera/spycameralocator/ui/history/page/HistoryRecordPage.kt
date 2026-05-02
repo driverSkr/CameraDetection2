@@ -89,7 +89,12 @@ fun HistoryRecordPage() {
                     when (val record = sortedHistory[index]) {
                         is HistoryRecord.Wifi -> {
                             WifiRecordItemView(record.device) {
-                                WifiDetectResultActivity.launch(context, record.device.suspiciousDevices, record.device.trustedDevices)
+                                WifiDetectResultActivity.launch(
+                                    context,
+                                    record.device.suspiciousDevices,
+                                    record.device.trustedDevices,
+                                    record.device.createTime
+                                )
                             }
                         }
                         is HistoryRecord.Bluetooth -> {

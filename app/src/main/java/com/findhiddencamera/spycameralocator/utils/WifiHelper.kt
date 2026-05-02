@@ -82,7 +82,7 @@ object WifiHelper {
     // 检测设备类型（端口扫描+推断）
     fun detectDeviceType(dev: Device, localIp: String): WifiDevice {
         var deviceType = "Unknown"
-        var deviceName = dev.hostname ?: "Unknown"
+        var deviceName = dev.hostname.orEmpty()
         var brandModel = ""
         var riskLevel = 1 // 默认全部可疑
 
@@ -90,7 +90,6 @@ object WifiHelper {
         if (dev.ip == localIp) {
             riskLevel = 0
             deviceType = "Phone"
-            deviceName = "Phone"
         } else {
             // 端口扫描推断类型
             val detectedPorts = Collections.synchronizedList(mutableListOf<Int>())
@@ -106,7 +105,6 @@ object WifiHelper {
 
                     override fun onFinished(openPorts: java.util.ArrayList<Int>?) {
                         deviceType = analyzeDeviceTypeByPorts(detectedPorts)
-                        deviceName = generateDeviceNameByType(deviceType)
                         latch.countDown()
                     }
                 })
@@ -114,13 +112,13 @@ object WifiHelper {
             latch.await(2500L, TimeUnit.MILLISECONDS)
         }
 
-        // 名称或类型检测不到，标题只显示Unknown
-        if (deviceName.isBlank() || deviceName.equals(
-                "Unknown Device",
-                true
-            ) || deviceName.equals("Device", true)
+        // 名称检测不到时，结果页统一显示疑似设备兜底文案
+        if (deviceName.isBlank() ||
+            deviceName.equals("Unknown", true) ||
+            deviceName.equals("Unknown Device", true) ||
+            deviceName.equals("Device", true)
         ) {
-            deviceName = "Unknown"
+            deviceName = "Suspected Devices"
         }
         if (deviceType.isBlank() || deviceType.equals(
                 "Unknown",
@@ -132,10 +130,15 @@ object WifiHelper {
 
         // 可信设备信号强度始终为0
         var signal = 0
-        // 只对可疑设备做ping和ttl
+        var pingDelay = -1L
+        // 只对可疑设备做ping
         if (riskLevel == 1) {
-            val (pingDelay, ttl) = getPingAndTtl(dev.ip)
-            signal = estimateSignalStrengthByPingTtl(pingDelay, ttl)
+            pingDelay = getPingAndTtl(dev.ip).first
+            signal = if (deviceType.equals("Camera", true)) {
+                100
+            } else {
+                estimateSignalStrengthByPing(pingDelay)
+            }
         }
 
         return WifiDevice(
@@ -149,6 +152,7 @@ object WifiHelper {
             mac = dev.mac ?: "",
             connected = true,
             rssi = signal,
+            ping = pingDelay,
             riskLevel = riskLevel
         )
     }
@@ -169,25 +173,6 @@ object WifiHelper {
         }
     }
 
-    // 名称生成
-    private fun generateDeviceNameByType(type: String): String {
-        return when (type) {
-            "Camera" -> "Camera"
-            "Router" -> "WiFi Router"
-            "Computer" -> "Computer"
-            "NAS" -> "Storage Device"
-            "Printer" -> "Printer"
-            "Windows PC" -> "Windows PC"
-            "Smart Device" -> "Smart Device"
-            "Web Device" -> "Web Device"
-            "IoT Device" -> "IoT Device"
-            "SNMP Device" -> "SNMP Device"
-            "DNS Server" -> "DNS Server"
-            "Mail Server" -> "Mail Server"
-            else -> "Unknown"
-        }
-    }
-
     private fun getPingAndTtl(ip: String): Pair<Long, Int> {
         try {
             val process = Runtime.getRuntime().exec("/system/bin/ping -c 1 -W 1 $ip")
@@ -204,26 +189,13 @@ object WifiHelper {
         }
     }
 
-    private fun estimateSignalStrengthByPingTtl(pingDelay: Long, ttl: Int): Int {
-        // ping越小信号越强，ttl越大信号越强
-        val signalByPing = when {
-            pingDelay in 0..5 -> 90
-            pingDelay in 6..10 -> 80
-            pingDelay in 11..20 -> 70
-            pingDelay in 21..50 -> 60
-            pingDelay in 51..100 -> 50
-            pingDelay > 100 -> 40
-            else -> 30
+    private fun estimateSignalStrengthByPing(pingDelay: Long): Int {
+        return when {
+            pingDelay in 0..100 -> 100
+            pingDelay in 101..200 -> 66
+            pingDelay > 200 -> 33
+            else -> 33
         }
-        val signalByTtl = when {
-            ttl >= 64 -> 90
-            ttl >= 32 -> 70
-            ttl >= 16 -> 50
-            ttl > 0 -> 30
-            else -> 30
-        }
-        // 综合
-        return ((signalByPing * 0.7) + (signalByTtl * 0.3)).toInt().coerceIn(0, 100)
     }
 
     private fun getSignalColor(signal: Int): Int {

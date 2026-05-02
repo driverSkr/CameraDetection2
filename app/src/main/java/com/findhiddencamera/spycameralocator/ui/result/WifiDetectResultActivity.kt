@@ -18,10 +18,16 @@ import com.skydoves.bundler.intentOf
 class WifiDetectResultActivity : BaseActivityVBind<LayoutComposeContainerBinding>() {
 
     companion object {
-        fun launch(context: Context, suspiciousDevices: List<WifiDevice>, trustedDevices: List<WifiDevice>) {
+        fun launch(
+            context: Context,
+            suspiciousDevices: List<WifiDevice>,
+            trustedDevices: List<WifiDevice>,
+            scanTimeSeconds: Long = System.currentTimeMillis().div(1000)
+        ) {
             context.intentOf<WifiDetectResultActivity> {
                 +("suspiciousDevices" to suspiciousDevices)
                 +("trustedDevices" to trustedDevices)
+                +("scanTimeSeconds" to scanTimeSeconds)
                 startActivity(context)
             }
         }
@@ -29,6 +35,7 @@ class WifiDetectResultActivity : BaseActivityVBind<LayoutComposeContainerBinding
 
     private val suspiciousDevices by bundle<ArrayList<WifiDevice>>("suspiciousDevices")
     private val trustedDevices by bundle<ArrayList<WifiDevice>>("trustedDevices")
+    private val scanTimeSeconds by bundle<Long>("scanTimeSeconds")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +44,11 @@ class WifiDetectResultActivity : BaseActivityVBind<LayoutComposeContainerBinding
                 CompositionLocalProvider {
                     ComposeProjectTheme {
                         Surface(modifier = Modifier.fillMaxSize(), color = Transparent) {
-                            WifiDetectResultPage(suspiciousDevices, trustedDevices)
+                            WifiDetectResultPage(
+                                suspiciousDevices,
+                                trustedDevices,
+                                scanTimeSeconds ?: System.currentTimeMillis().div(1000)
+                            )
                         }
                     }
                 }

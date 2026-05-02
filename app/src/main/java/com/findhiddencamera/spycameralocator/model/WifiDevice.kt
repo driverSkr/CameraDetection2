@@ -15,5 +15,6 @@ data class WifiDevice(
     var mac: String = "",
     var connected: Boolean = true,
     var rssi: Int = 0,
+    var ping: Long = -1L,
     val riskLevel: Int = 0           // 0 = 安全，1 = 高风险
 ) : Parcelable

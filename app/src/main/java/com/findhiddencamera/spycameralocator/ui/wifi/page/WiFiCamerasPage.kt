@@ -174,13 +174,15 @@ fun WiFiCamerasPage() {
 
             val suspiciousDevicesList = ArrayList(suspiciousDevices.toList())
             val trustedDevicesList = ArrayList(trustedDevices.toList())
+            val scanTimeSeconds = System.currentTimeMillis().div(1000)
             DetectDataBase.invoke(context).getWifiDao().addDevice(
                 DetectWifiDevice(
+                    createTime = scanTimeSeconds,
                     suspiciousDevices = suspiciousDevicesList,
                     trustedDevices = trustedDevicesList
                 )
             )
-            WifiDetectResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList)
+            WifiDetectResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
             context.findBaseActivityVBind()?.finish()
         }
     }
