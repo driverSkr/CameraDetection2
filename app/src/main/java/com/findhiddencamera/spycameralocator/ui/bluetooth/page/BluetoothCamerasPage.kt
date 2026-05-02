@@ -174,13 +174,15 @@ fun BluetoothCamerasPage() {
 
             val suspiciousDevicesList = ArrayList(suspiciousDevices.toList())
             val trustedDevicesList = ArrayList(trustedDevices.toList())
+            val scanTimeSeconds = System.currentTimeMillis().div(1000)
             DetectDataBase.invoke(context).getBluetoothDao().addDevice(
                 DetectBluetoothDevice(
+                    createTime = scanTimeSeconds,
                     suspiciousDevices = suspiciousDevicesList,
                     trustedDevices = trustedDevicesList
                 )
             )
-            BluetoothScanResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList)
+            BluetoothScanResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
             context.findBaseActivityVBind()?.finish()
         }
     }

@@ -136,7 +136,9 @@ object BluetoothHelper {
 
     @SuppressLint("MissingPermission")
     fun addDevice(device: BluetoothDevice, rssi: Int?, localBluetoothMac: String, suspiciousDevices: SnapshotStateList<com.findhiddencamera.spycameralocator.model.BluetoothDevice>, trustedDevices: SnapshotStateList<com.findhiddencamera.spycameralocator.model.BluetoothDevice>) {
-        val name = device.name ?: "Unknown"
+        val name = device.name
+            ?.takeIf { it.isNotBlank() && !it.equals("Unknown", true) }
+            ?: "Suspected Devices"
         val mac = device.address ?: ""
         val type = when (device.type) {
             BluetoothDevice.DEVICE_TYPE_CLASSIC -> "Classic"

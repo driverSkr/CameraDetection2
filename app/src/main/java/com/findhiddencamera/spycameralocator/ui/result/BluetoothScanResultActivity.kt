@@ -18,10 +18,16 @@ import com.skydoves.bundler.intentOf
 class BluetoothScanResultActivity : BaseActivityVBind<LayoutComposeContainerBinding>() {
 
     companion object {
-        fun launch(context: Context, suspiciousDevices: List<BluetoothDevice>, trustedDevices: List<BluetoothDevice>) {
+        fun launch(
+            context: Context,
+            suspiciousDevices: List<BluetoothDevice>,
+            trustedDevices: List<BluetoothDevice>,
+            scanTimeSeconds: Long = System.currentTimeMillis().div(1000)
+        ) {
             context.intentOf<BluetoothScanResultActivity> {
                 +("suspiciousDevices" to suspiciousDevices)
                 +("trustedDevices" to trustedDevices)
+                +("scanTimeSeconds" to scanTimeSeconds)
                 startActivity(context)
             }
         }
@@ -29,6 +35,7 @@ class BluetoothScanResultActivity : BaseActivityVBind<LayoutComposeContainerBind
 
     private val suspiciousDevices by bundle<ArrayList<BluetoothDevice>>("suspiciousDevices")
     private val trustedDevices by bundle<ArrayList<BluetoothDevice>>("trustedDevices")
+    private val scanTimeSeconds by bundle<Long>("scanTimeSeconds")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +44,11 @@ class BluetoothScanResultActivity : BaseActivityVBind<LayoutComposeContainerBind
                 CompositionLocalProvider {
                     ComposeProjectTheme {
                         Surface(modifier = Modifier.fillMaxSize(), color = Transparent) {
-                            BluetoothScanResultPage(suspiciousDevices, trustedDevices)
+                            BluetoothScanResultPage(
+                                suspiciousDevices,
+                                trustedDevices,
+                                scanTimeSeconds ?: System.currentTimeMillis().div(1000)
+                            )
                         }
                     }
                 }

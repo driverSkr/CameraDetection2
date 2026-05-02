@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,13 +15,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.findhiddencamera.spycameralocator.R
@@ -31,40 +33,163 @@ import com.findhiddencamera.spycameralocator.theme.White
 
 @Composable
 fun BluetoothInfoDevice(info: BluetoothDevice, onClick: () -> Unit) {
-//    val deviceType = when(info.riskLevel) {
-//        1 -> R.drawable.svg_icon_wifi_info_router
-//        else -> R.drawable.svg_icon_wifi_info_router
-//    }
-    val deviceType = when(info.type) {
-        "Camera" -> R.drawable.svg_camera
-        else -> R.drawable.svg_camera
-    }
+    val risk = riskUi(info)
+    val typeLabel = info.displayType()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .border(width = 1.dp, color = Color(0x145874FF), shape = RoundedCornerShape(10.dp))
-            .background(color = White, shape = RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp)
-            .clickable{ onClick.invoke() },
+            .shadow(elevation = 7.dp, shape = RoundedCornerShape(8.dp), clip = false)
+            .border(width = 1.dp, color = Color(0x0D5874FF), shape = RoundedCornerShape(8.dp))
+            .background(color = White, shape = RoundedCornerShape(8.dp))
+            .clickable { onClick.invoke() }
+            .padding(start = 10.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.size(36.dp).background(color = Color(0x14939DAA), shape = RoundedCornerShape(8.dp))) {
-            Image(painter = painterResource(deviceType), contentDescription = null)
-            Image(painter = painterResource(R.drawable.svg_red_light), contentDescription = null, modifier = Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp).size(18.dp))
-        }
+        DeviceTypeIcon(type = typeLabel, risk = risk)
 
         Spacer(modifier = Modifier.width(10.dp))
-        Column {
-            Text(info.name, color = Color(0xFF152946), fontSize = 14.sp, lineHeight = 14.sp, fontWeight = FontWeight.W500)
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(info.mac, color = Color(0xFF939DAA), fontSize = 12.sp, lineHeight = 12.sp, fontWeight = FontWeight.W400)
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = info.displayName(),
+                color = Color(0xFF152946),
+                fontSize = 14.sp,
+                lineHeight = 15.sp,
+                fontWeight = FontWeight.W600,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Online Now",
+                color = Color(0xFF939DAA),
+                fontSize = 12.sp,
+                lineHeight = 12.sp,
+                fontWeight = FontWeight.W400,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
-        Spacer(modifier = Modifier.weight(1f))
-        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            repeat(3) {
-                Box(modifier = Modifier.size(6.dp).background(color = Color(0xFFF53863), shape = RoundedCornerShape(1.dp)))
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        SignalBlocks(activeBlocks = risk.signalBlocks, color = risk.color)
+    }
+}
+
+@Composable
+private fun DeviceTypeIcon(type: String, risk: BluetoothRiskUi) {
+    val iconRes = when (type.lowercase()) {
+        "camera" -> R.drawable.svg_camera
+        "computer" -> R.drawable.svg_pc
+        "phone" -> R.drawable.svg_icon_sensor
+        "audio/video", "headphone", "speaker", "wearable", "ble device", "classic device", "dual" -> R.drawable.svg_icon_sensor
+        else -> R.drawable.svg_icon_sensor
+    }
+    val useImageWithoutTint = type.equals("Camera", true)
+
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .background(Color(0xFFF7F8FA), RoundedCornerShape(7.dp))
+    ) {
+        if (useImageWithoutTint) {
+            Image(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.Center).size(32.dp)
+            )
+        } else {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = Color(0xFF152946),
+                modifier = Modifier.align(Alignment.Center).size(20.dp)
+            )
+        }
+        RiskLamp(
+            risk = risk,
+            modifier = Modifier.align(Alignment.TopEnd).offset(x = 5.dp, y = (-5).dp)
+        )
+    }
+}
+
+@Composable
+private fun RiskLamp(risk: BluetoothRiskUi, modifier: Modifier = Modifier) {
+    if (risk.signalBlocks == 3) {
+        Image(
+            painter = painterResource(R.drawable.svg_red_light),
+            contentDescription = null,
+            modifier = modifier.size(14.dp)
+        )
+    } else {
+        Box(
+            modifier = modifier
+                .size(8.dp)
+                .background(risk.color, RoundedCornerShape(3.dp))
+        )
+    }
+}
+
+@Composable
+private fun SignalBlocks(activeBlocks: Int, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        repeat(3) { index ->
+            Box(
+                modifier = Modifier
+                    .width(5.dp)
+                    .height(5.dp)
+                    .background(
+                        color = if (index < activeBlocks) color else Color(0xFFE9EDF2),
+                        shape = RoundedCornerShape(1.dp)
+                    )
+            )
+            if (index != 2) {
+                Spacer(modifier = Modifier.width(3.dp))
             }
         }
+    }
+}
+
+private data class BluetoothRiskUi(
+    val color: Color,
+    val signalBlocks: Int
+)
+
+private fun riskUi(info: BluetoothDevice): BluetoothRiskUi {
+    return when {
+        info.type.equals("Camera", true) ->
+            BluetoothRiskUi(Color(0xFFF53863), 3)
+        info.rssi > -50 ->
+            BluetoothRiskUi(Color(0xFFF53863), 3)
+        info.rssi >= -85 ->
+            BluetoothRiskUi(Color(0xFFFFC107), 2)
+        else ->
+            BluetoothRiskUi(Color(0xFF05CA67), 1)
+    }
+}
+
+private fun BluetoothDevice.displayName(): String {
+    val rawName = name.trim()
+    return if (
+        rawName.isBlank() ||
+        rawName.equals("Unknown", true) ||
+        rawName.equals("Unknown Device", true) ||
+        rawName.equals("Device", true)
+    ) {
+        "Suspected Devices"
+    } else {
+        rawName
+    }
+}
+
+private fun BluetoothDevice.displayType(): String {
+    val rawType = type.trim()
+    return if (rawType.isBlank() || rawType.equals("Device", true)) {
+        "Unknown"
+    } else {
+        rawType
     }
 }

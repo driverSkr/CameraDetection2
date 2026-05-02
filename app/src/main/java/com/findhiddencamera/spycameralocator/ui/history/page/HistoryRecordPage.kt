@@ -99,7 +99,12 @@ fun HistoryRecordPage() {
                         }
                         is HistoryRecord.Bluetooth -> {
                             BluetoothRecordItemView(record.device) {
-                                BluetoothScanResultActivity.launch(context, record.device.suspiciousDevices, record.device.trustedDevices)
+                                BluetoothScanResultActivity.launch(
+                                    context,
+                                    record.device.suspiciousDevices,
+                                    record.device.trustedDevices,
+                                    record.device.createTime
+                                )
                             }
                         }
                     }
