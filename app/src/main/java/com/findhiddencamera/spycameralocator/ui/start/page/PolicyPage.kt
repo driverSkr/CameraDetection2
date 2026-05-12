@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,13 +33,32 @@ import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.theme.White50
 import com.findhiddencamera.spycameralocator.ui.home.HomeActivity
+import com.findhiddencamera.spycameralocator.ui.web.WebViewPage
+import com.findhiddencamera.spycameralocator.utils.Constants
 import com.findhiddencamera.spycameralocator.utils.LaunchUtils
 import com.findhiddencamera.spycameralocator.utils.TextUtils
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 
+private data class PolicyWebPage(
+    val title: String,
+    val url: String
+)
+
 @Composable
 fun PolicyPage() {
     val context = LocalContext.current
+    val webPageState = remember { mutableStateOf<PolicyWebPage?>(null) }
+
+    webPageState.value?.let { webPage ->
+        WebViewPage(
+            title = webPage.title,
+            url = webPage.url,
+            onBack = {
+                webPageState.value = null
+            }
+        )
+        return
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(color = Color(0xFF152946))) {
         Image(painter = painterResource(R.mipmap.img_policy_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
@@ -63,13 +84,16 @@ fun PolicyPage() {
                     val span2 = "Terms of Use"
                     val click1 = object : ClickableSpan() {
                         override fun onClick(p0: View) {
-                            // todo 需要配置外链
-                            LaunchUtils.launchWeb(context, "", span1)
+                            // 点击协议后在应用内部打开WebView，后续只需要补充真实链接
+                            webPageState.value = PolicyWebPage(span1, "www.baidu.com")
+//                            LaunchUtils.launchWeb(context, Constants.PRIVACY_POLICY, span1)
                         }
                     }
                     val click2 = object : ClickableSpan() {
                         override fun onClick(p0: View) {
-                            LaunchUtils.launchWeb(context, "", span2)
+                            // 点击协议后在应用内部打开WebView，后续只需要补充真实链接
+//                            webPageState.value = PolicyWebPage(span2, Constants.TERMS_OF_SERVICE)
+                            LaunchUtils.launchWeb(context, Constants.TERMS_OF_SERVICE, span2)
                         }
                     }
                     val spans = arrayOf(
