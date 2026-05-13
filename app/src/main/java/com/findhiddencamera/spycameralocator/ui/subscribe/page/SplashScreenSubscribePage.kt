@@ -51,10 +51,14 @@ import com.findhiddencamera.spycameralocator.theme.White50
 import com.findhiddencamera.spycameralocator.ui.subscribe.view.SubProductView
 import com.findhiddencamera.spycameralocator.ui.subscribe.viewmodel.SubscribeViewModel
 import com.findhiddencamera.spycameralocator.utils.DataHelper
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
+import com.findhiddencamera.spycameralocator.utils.ToastType
 import com.findhiddencamera.spycameralocator.utils.findActivity
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
+import com.findhiddencamera.spycameralocator.utils.showToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 开屏订阅页
@@ -113,6 +117,30 @@ fun SplashScreenSubscribePage() {
             )
             Spacer(modifier = Modifier.weight(1f))
             Box(modifier = Modifier
+                .clickable {
+                    val activity = context.findActivity() as? FragmentActivity
+                    scope.launch {
+                        dialog.value = true
+                        // Restore时主动刷新一次订阅状态，确保拿到最新购买结果
+                        val isSubscribed = withContext(Dispatchers.Default) {
+                            SubscribeHelper.refreshSubscribeStateSuspend()
+                        }
+                        dialog.value = false
+                        if (isSubscribed) {
+                            "Welcome back, dear VIP".showToast(context, ToastType.SUCCESS)
+                            context.findBaseActivityVBind()?.finish()
+                        } else {
+                            "No valid subscriptions found.".showToast(context, ToastType.HINT)
+                            if (selectedSubProduct != null && activity != null) {
+                                // 未恢复到有效订阅时，继续发起当前选中套餐的订阅购买
+                                dialog.value = true
+                                subscribeViewModel?.buySubscribe(selectedSubProduct, activity, dialog)
+                            } else {
+                                Toast.makeText(context, "no product", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
                 .background(color = Color(0xFF152946).copy(alpha = 0.3f), shape = RoundedCornerShape(11.dp))
                 .padding(horizontal = 6.dp, vertical = 3.dp)
             ) {
