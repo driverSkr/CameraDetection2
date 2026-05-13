@@ -210,10 +210,11 @@ fun EmptyView(modifier: Modifier = Modifier, onRetryClick: () -> Unit) {
     Column(modifier = modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Text("No product found", color = Color.Red, fontSize = 16.sp, fontWeight = FontWeight.W400)
         Box(modifier = Modifier
+            .clickable { onRetryClick.invoke() }
             .padding(top = 20.dp)
             .border(width = 1.dp, color = Color.White, shape = RoundedCornerShape(44.dp))
             .padding(vertical = 10.dp, horizontal = 30.dp)
-            .clickable { onRetryClick.invoke() }) {
+        ) {
             Text("Retry", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.W400)
         }
     }
