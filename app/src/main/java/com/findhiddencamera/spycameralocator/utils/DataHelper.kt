@@ -55,4 +55,21 @@ object DataHelper {
             true
         }
     }
+
+    fun getDailyShowCount(context: Context, key: String): Int {
+        return runCatching {
+            val sharedPreferences = context.getSharedPreferences("sp_daily_$key", Context.MODE_PRIVATE)
+            val today = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+            val savedDay = sharedPreferences.getString("day", null)
+            if (savedDay == today) {
+                sharedPreferences.getInt("count", 0)
+            } else {
+                0
+            }
+        }.getOrElse { throwable ->
+            // 读取失败时按首次展示处理，避免影响订阅页正常打开
+            Log.e(TAG, "读取每日展示次数失败：$key", throwable)
+            0
+        }
+    }
 }

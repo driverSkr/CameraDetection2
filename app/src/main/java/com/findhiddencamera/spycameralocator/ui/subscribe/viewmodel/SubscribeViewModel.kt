@@ -61,14 +61,31 @@ class SubscribeViewModel: ViewModel() {
         }
     }
 
-    suspend fun querySplashScreenSubProduct(context: Context) = suspendCoroutine { suspendCoroutine ->
+    suspend fun querySplashScreenSubProduct(context: Context, saleMode: Int = 0) = suspendCoroutine { suspendCoroutine ->
         viewModelScope.launch(Dispatchers.Default) {
-            var isQueryPrice = false
-            val goodsList = arrayListOf(SubHelper.getProductId(), SubHelper.getProductId())
-            val planList = arrayListOf(SubHelper.getYearPlanId(), SubHelper.getWeekPlanId())
-            val offerList = arrayListOf("", "")
-            val skuList = arrayListOf(SubHelper.getYearSkuId(), SubHelper.getWeekSkuId())
+            // 开屏订阅按销售模式查询不同套餐：0=年+周，1=月，2=年
+            val planList = when (saleMode) {
+                1 -> arrayListOf(SubHelper.getMonthPlanId())
+                2 -> arrayListOf(SubHelper.getYearPlanId())
+                else -> arrayListOf(SubHelper.getYearPlanId(), SubHelper.getWeekPlanId())
+            }
+            val skuList = when (saleMode) {
+                1 -> arrayListOf(SubHelper.getMonthSkuId())
+                2 -> arrayListOf(SubHelper.getYearSkuId())
+                else -> arrayListOf(SubHelper.getYearSkuId(), SubHelper.getWeekSkuId())
+            }
+            val goodsList = ArrayList<String>().apply {
+                repeat(planList.size) {
+                    add(SubHelper.getProductId())
+                }
+            }
+            val offerList = ArrayList<String>().apply {
+                repeat(planList.size) {
+                    add("")
+                }
+            }
             val list = mutableListOf<SubModel>()
+            var isQueryPrice = false
             for (i in planList.indices) {
                 val planId = planList[i]
                 val model = SubModel()

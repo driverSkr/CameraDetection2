@@ -1,6 +1,7 @@
 package com.findhiddencamera.spycameralocator.ui.subscribe.page
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,6 +50,7 @@ import com.findhiddencamera.spycameralocator.theme.White10
 import com.findhiddencamera.spycameralocator.theme.White50
 import com.findhiddencamera.spycameralocator.ui.subscribe.view.SubProductView
 import com.findhiddencamera.spycameralocator.ui.subscribe.viewmodel.SubscribeViewModel
+import com.findhiddencamera.spycameralocator.utils.DataHelper
 import com.findhiddencamera.spycameralocator.utils.findActivity
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import kotlinx.coroutines.Dispatchers
@@ -66,16 +68,21 @@ fun SplashScreenSubscribePage() {
     var subModelList by remember { mutableStateOf<MutableList<SubModel>?>(null) }
     var selectedSubProduct by remember { mutableStateOf<SubModel?>(null) }
     val subscribeViewModel = context.findBaseActivityVBind()?.let { viewModel<SubscribeViewModel>(it) }
+    val showBundleType = remember {
+        val showCount = DataHelper.getDailyShowCount(context, "splash_screen_subscribe")
+        // 每日6次按 0、1、2、0、1、2 轮换展示三种销售模式
+        ((showCount - 1).coerceAtLeast(0)) % 3
+    }
 
     /**
      * 查询订阅商品
      */
-    LaunchedEffect(Unit) {
+    LaunchedEffect(showBundleType) {
         isLoading = true
-        val queryResult = subscribeViewModel?.querySplashScreenSubProduct(context)
+        val queryResult = subscribeViewModel?.querySplashScreenSubProduct(context, showBundleType)
         if (queryResult != null) {
             subModelList = queryResult
-            selectedSubProduct = queryResult.getOrNull(1)
+            selectedSubProduct = queryResult.getOrNull(1) ?: queryResult.getOrNull(0)
         }
         isLoading = false
     }
@@ -154,27 +161,44 @@ fun SplashScreenSubscribePage() {
                     }
                 } else {
                     subModelList?.let { list ->
-                        Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Bottom) {
-                            list.forEach { model ->
-                                SubProductView(modifier = Modifier.weight(1f),  selectedSubProduct?.id == model.id, model) {
-                                    selectedSubProduct = model
+                        AnimatedContent(showBundleType) {
+                            when (it) {
+                                0 -> {
+                                    Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Bottom) {
+                                        list.forEach { model ->
+                                            SubProductView(modifier = Modifier.weight(1f),  selectedSubProduct?.id == model.id, model) {
+                                                selectedSubProduct = model
+                                            }
+                                        }
+                                    }
+                                }
+                                1 -> {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        Text("${list[0].price}${list[0].currency} per month", color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.W500, textAlign = TextAlign.Center, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth())
+                                    }
+                                }
+                                2 -> {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        Text("${list[0].price}${list[0].currency} per year", color = Color(0xFF939DAA), fontSize = 12.sp, fontWeight = FontWeight.W500, textAlign = TextAlign.Center, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth())
+                                    }
                                 }
                             }
                         }
+
                     } ?: EmptyView {
                         scope.launch(Dispatchers.Default) {
                             isLoading = true
-                            val queryResult = subscribeViewModel?.querySplashScreenSubProduct(context)
+                            val queryResult = subscribeViewModel?.querySplashScreenSubProduct(context, showBundleType)
                             if (queryResult != null) {
                                 subModelList = queryResult
-                                selectedSubProduct = queryResult[0]
+                                selectedSubProduct = queryResult.getOrNull(1) ?: queryResult.getOrNull(0)
                             }
                             isLoading = false
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(if (showBundleType == 0) 30.dp else 10.dp))
             Box(modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
