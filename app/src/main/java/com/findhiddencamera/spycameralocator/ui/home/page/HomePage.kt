@@ -119,7 +119,8 @@ fun HomePage() {
     }
 
     LaunchedEffect(Unit) {
-        if (DataHelper.isFirst(context, "enter_home_page")) {
+        // 开屏订阅每天最多展示6次，超过后当天不再弹出
+        if (DataHelper.canShowDaily(context, "splash_screen_subscribe", 6)) {
             SplashScreenSubscribeActivity.launch(context)
         }
     }
@@ -386,4 +387,3 @@ fun HomePage() {
         }
     }
 }
-
