@@ -27,8 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,8 +48,12 @@ import androidx.compose.ui.unit.sp
 import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.theme.White50
+import com.findhiddencamera.spycameralocator.ui.subscribe.SubscribeActivity
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
+import kotlinx.coroutines.delay
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 // 仪表盘刻度从左下角开始，顺时针扫到右下角，总跨度约 270 度。
 private const val GAUGE_START_ANGLE = -135f
@@ -59,11 +65,26 @@ private const val POINTER_PIVOT_X = 0.5f
 private const val POINTER_PIVOT_Y = 224.5f / 297f
 
 @Composable
-fun MagneticFieldPage() {
+fun MagneticFieldPage(showSubscribeGuide: Boolean = false) {
     val context = LocalContext.current
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     val magneticSensor = remember { sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
     var magneticGauge by remember { mutableIntStateOf(0) }
+    var isDangerGuideState by remember { mutableStateOf(false) }
+    var dangerGuideGauge by remember { mutableIntStateOf(50) }
+
+    LaunchedEffect(showSubscribeGuide) {
+        if (!showSubscribeGuide || SubscribeHelper.isSubscribed) {
+            return@LaunchedEffect
+        }
+
+        delay(2_000)
+        dangerGuideGauge = Random.nextInt(from = 50, until = 81)
+        isDangerGuideState = true
+        delay(500)
+        SubscribeActivity.launch(context)
+        context.findBaseActivityVBind()?.finish()
+    }
 
     val magneticSensorListener = remember {
         object : SensorEventListener {
@@ -116,7 +137,8 @@ fun MagneticFieldPage() {
     }
 
     // 将 0-100 的读数映射到 -135° 到 +135°，Compose 中正角度即顺时针旋转。
-    val normalizedGauge = magneticGauge.coerceIn(0, 100) / 100f
+    val displayGauge = if (isDangerGuideState) dangerGuideGauge else magneticGauge
+    val normalizedGauge = displayGauge.coerceIn(0, 100) / 100f
     val targetRotationAngle = GAUGE_START_ANGLE + normalizedGauge * GAUGE_SWEEP_ANGLE
 
     val rotationAngle by animateFloatAsState(
@@ -135,7 +157,17 @@ fun MagneticFieldPage() {
     // 让“圆球中心”而不是“图片中心”落在仪表盘中心。
     val pointerPivotOffsetY = (pointerHeight.value * (0.5f - POINTER_PIVOT_Y)).dp
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF8095FF)).statusBarsPadding()) {
+    val backgroundColor = if (isDangerGuideState) Color(0xFFF53863) else Color(0xFF8095FF)
+    val arcImage = if (isDangerGuideState) R.mipmap.img_circular_arc_danger_2 else R.mipmap.img_circular_arc_2
+    val pointerImage = if (isDangerGuideState) R.mipmap.img_circular_pointer_danger_2 else R.mipmap.img_circular_pointer_2
+    val magneticIcon = if (isDangerGuideState) R.mipmap.img_magnetic_danger_icon else R.mipmap.img_magnetic_icon
+    val signalText = if (isDangerGuideState) {
+        "Abnormal signal, please pay attention!"
+    } else {
+        "Detecting magnetic field signal..."
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(backgroundColor).statusBarsPadding()) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 9.dp)) {
             Image(
                 painter = painterResource(R.drawable.svg_back),
@@ -160,14 +192,14 @@ fun MagneticFieldPage() {
                 .offset(y = (-60).dp)
         ) {
             Image(
-                painter = painterResource(R.mipmap.img_circular_arc_2),
+                painter = painterResource(arcImage),
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize().align(Alignment.TopCenter),
                 contentDescription = null
             )
 
             Image(
-                painter = painterResource(R.mipmap.img_circular_pointer_2),
+                painter = painterResource(pointerImage),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(width = pointerWidth, height = pointerHeight)
@@ -189,7 +221,7 @@ fun MagneticFieldPage() {
                     .background(color = Color(0xFFF5D836), shape = RoundedCornerShape(35.dp))
             ) {
                 Text(
-                    "$magneticGauge",
+                    "$displayGauge",
                     color = Color(0xFF152946),
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
@@ -203,14 +235,14 @@ fun MagneticFieldPage() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(R.mipmap.img_magnetic_icon),
+                painter = painterResource(magneticIcon),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(60.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                "Detecting magnetic field signal...",
+                signalText,
                 color = White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
