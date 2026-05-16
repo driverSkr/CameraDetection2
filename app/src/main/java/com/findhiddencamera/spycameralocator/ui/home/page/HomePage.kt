@@ -1,9 +1,14 @@
 package com.findhiddencamera.spycameralocator.ui.home.page
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,7 +47,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentActivity
 import com.findhiddencamera.spycameralocator.BuildConfig
 import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.dialog.DialogHelper
@@ -73,6 +77,7 @@ private enum class FeatureAction {
 fun HomePage() {
     val context = LocalContext.current
     val activity = context.findActivity()
+    val fragmentActivity = activity as? FragmentActivity
     val isFirstHomeVisit = remember { DataHelper.isFirst(context, "enter_home_page") }
     var pendingAction by remember { mutableStateOf<FeatureAction?>(null) }
     val detectNowColor = if (isFirstHomeVisit) Color(0xFFF53863) else Color(0xFF5672FF)
@@ -94,6 +99,11 @@ fun HomePage() {
         }
     }
 
+    lateinit var checkWifiPermissionAndLaunch: () -> Unit
+    lateinit var checkBluetoothPermissionAndLaunch: () -> Unit
+    lateinit var openWifiSettingsForScan: () -> Unit
+    lateinit var openBluetoothSettingsForScan: () -> Unit
+
     val wifiPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (pendingAction == FeatureAction.WIFI) {
             if (WifiHelper.hasWifiPermission(context)) {
@@ -105,6 +115,39 @@ fun HomePage() {
         pendingAction = null
     }
 
+    val wifiEnableLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (pendingAction == FeatureAction.WIFI) {
+            if (WifiHelper.isWifiEnabled(context)) {
+                checkWifiPermissionAndLaunch()
+            } else {
+                pendingAction = null
+            }
+        }
+    }
+
+    val bluetoothEnableLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (pendingAction == FeatureAction.BLUETOOTH) {
+            if (BluetoothHelper.isBluetoothEnabled(context)) {
+                checkBluetoothPermissionAndLaunch()
+            } else {
+                pendingAction = null
+            }
+        }
+    }
+
+    checkWifiPermissionAndLaunch = {
+        if (WifiHelper.hasWifiPermission(context)) {
+            launchWifiFromHome()
+        } else if (activity != null) {
+            pendingAction = FeatureAction.WIFI
+            AppPermissionHelper.requestPermissionsOrOpenSettings(
+                activity,
+                WifiHelper.requiredPermissions(),
+                wifiPermissionLauncher
+            )
+        }
+    }
+
     val bluetoothPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (pendingAction == FeatureAction.BLUETOOTH) {
             if (BluetoothHelper.hasBluetoothPermission(context)) {
@@ -114,6 +157,40 @@ fun HomePage() {
             }
         }
         pendingAction = null
+    }
+
+    checkBluetoothPermissionAndLaunch = {
+        if (BluetoothHelper.hasBluetoothPermission(context)) {
+            launchBluetoothFromHome()
+        } else if (activity != null) {
+            pendingAction = FeatureAction.BLUETOOTH
+            AppPermissionHelper.requestPermissionsOrOpenSettings(
+                activity,
+                BluetoothHelper.requiredPermissions(),
+                bluetoothPermissionLauncher
+            )
+        }
+    }
+
+    openWifiSettingsForScan = {
+        pendingAction = FeatureAction.WIFI
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Intent(Settings.Panel.ACTION_WIFI)
+        } else {
+            Intent(Settings.ACTION_WIFI_SETTINGS)
+        }
+        wifiEnableLauncher.launch(intent)
+    }
+
+    openBluetoothSettingsForScan = {
+        pendingAction = FeatureAction.BLUETOOTH
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+        } else {
+            @Suppress("DEPRECATION")
+            Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        }
+        bluetoothEnableLauncher.launch(intent)
     }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -164,8 +241,7 @@ fun HomePage() {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
-//                    SettingActivity.launch(context)
-                    DialogHelper.requestBluetoothPermissionDialog(context as FragmentActivity)
+                    SettingActivity.launch(context)
                 })
             }
 
@@ -207,19 +283,14 @@ fun HomePage() {
                         .fillMaxWidth()
                         .clickable {
                             if (!WifiHelper.isWifiEnabled(context)) {
-                                Toast.makeText(context, "Please connect to wifi first", Toast.LENGTH_LONG).show()
+                                if (fragmentActivity != null) {
+                                    DialogHelper.requestWifiPermissionDialog(fragmentActivity) {
+                                        openWifiSettingsForScan()
+                                    }
+                                }
                                 return@clickable
                             }
-                            if (WifiHelper.hasWifiPermission(context)) {
-                                launchWifiFromHome()
-                            } else if (activity != null) {
-                                pendingAction = FeatureAction.WIFI
-                                AppPermissionHelper.requestPermissionsOrOpenSettings(
-                                    activity,
-                                    WifiHelper.requiredPermissions(),
-                                    wifiPermissionLauncher
-                                )
-                            }
+                            checkWifiPermissionAndLaunch()
                         }) {
                         Image(
                             painter = painterResource(R.mipmap.img_home_func_bg),
@@ -255,16 +326,15 @@ fun HomePage() {
                     Box(modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            if (BluetoothHelper.hasBluetoothPermission(context)) {
-                                launchBluetoothFromHome()
-                            } else if (activity != null) {
-                                pendingAction = FeatureAction.BLUETOOTH
-                                AppPermissionHelper.requestPermissionsOrOpenSettings(
-                                    activity,
-                                    BluetoothHelper.requiredPermissions(),
-                                    bluetoothPermissionLauncher
-                                )
+                            if (!BluetoothHelper.isBluetoothEnabled(context)) {
+                                if (fragmentActivity != null) {
+                                    DialogHelper.requestBluetoothPermissionDialog(fragmentActivity) {
+                                        openBluetoothSettingsForScan()
+                                    }
+                                }
+                                return@clickable
                             }
+                            checkBluetoothPermissionAndLaunch()
                         }) {
                         Image(
                             painter = painterResource(R.mipmap.img_home_func_bg),

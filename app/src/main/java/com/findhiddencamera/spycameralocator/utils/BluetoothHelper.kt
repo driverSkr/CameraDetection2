@@ -3,7 +3,9 @@ package com.findhiddencamera.spycameralocator.utils
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothClass
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -29,6 +31,19 @@ object BluetoothHelper {
 
     fun hasBluetoothPermission(context: Context): Boolean {
         return AppPermissionHelper.hasPermissions(context, requiredPermissions())
+    }
+
+    @SuppressLint("MissingPermission")
+    fun isBluetoothEnabled(context: Context): Boolean {
+        return runCatching {
+            val adapter = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                context.getSystemService(BluetoothManager::class.java)?.adapter
+            } else {
+                @Suppress("DEPRECATION")
+                BluetoothAdapter.getDefaultAdapter()
+            }
+            adapter?.isEnabled == true
+        }.getOrDefault(false)
     }
 
     /**

@@ -31,24 +31,24 @@ object DialogHelper {
         dialog.show()
     }
 
-    fun requestWifiPermissionDialog(activity: FragmentActivity) {
+    fun requestWifiPermissionDialog(activity: FragmentActivity, onAllow: () -> Unit = {}) {
         val (binding, dialog) = ComposeNativeDialog.composeBaseDialog(activity)
         binding.composeView.apply {
             setContent {
                 ComposeProjectTheme {
-                    RequestWifiPermissionView()
+                    RequestWifiPermissionView(dialog, onAllow)
                 }
             }
         }
         dialog.show()
     }
 
-    fun requestBluetoothPermissionDialog(activity: FragmentActivity) {
+    fun requestBluetoothPermissionDialog(activity: FragmentActivity, onAllow: () -> Unit = {}) {
         val (binding, dialog) = ComposeNativeDialog.composeBaseDialog(activity)
         binding.composeView.apply {
             setContent {
                 ComposeProjectTheme {
-                    RequestBluetoothPermissionView()
+                    RequestBluetoothPermissionView(dialog, onAllow)
                 }
             }
         }
