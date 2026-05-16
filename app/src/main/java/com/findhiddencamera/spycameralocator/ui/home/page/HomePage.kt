@@ -76,12 +76,28 @@ fun HomePage() {
     val detectNowColor = if (isFirstHomeVisit) Color(0xFFF53863) else Color(0xFF5672FF)
     val isSubscribed by SubscribeHelper.isSubscribedFlow.collectAsState()
 
+    fun launchWifiFromHome() {
+        if (isSubscribed || DataHelper.isFirst(context, "wifi_free_scan")) {
+            WiFiCamerasActivity.launch(context)
+        } else {
+            SubscribeActivity.launch(context)
+        }
+    }
+
+    fun launchBluetoothFromHome() {
+        if (isSubscribed || DataHelper.isFirst(context, "bluetooth_free_scan")) {
+            BluetoothCamerasActivity.launch(context)
+        } else {
+            SubscribeActivity.launch(context)
+        }
+    }
+
     val wifiPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) {
         if (pendingAction == FeatureAction.WIFI) {
             if (WifiHelper.hasWifiPermission(context)) {
-                WiFiCamerasActivity.launch(context)
+                launchWifiFromHome()
             } else if (activity != null && AppPermissionHelper.shouldOpenSettings(
                     activity,
                     WifiHelper.requiredPermissions()
@@ -98,7 +114,7 @@ fun HomePage() {
     ) {
         if (pendingAction == FeatureAction.BLUETOOTH) {
             if (BluetoothHelper.hasBluetoothPermission(context)) {
-                BluetoothCamerasActivity.launch(context)
+                launchBluetoothFromHome()
             } else if (activity != null && AppPermissionHelper.shouldOpenSettings(
                     activity,
                     BluetoothHelper.requiredPermissions()
@@ -165,7 +181,7 @@ fun HomePage() {
             }
 
             if (BuildConfig.DEBUG) {
-                // TODO Remove this temporary subscription toggle before release verification.
+                // TODO 在发布审核前移除该临时订阅开关。
                 Box(
                     modifier = Modifier
                         .padding(top = 10.dp)
@@ -206,7 +222,7 @@ fun HomePage() {
                                 return@clickable
                             }
                             if (WifiHelper.hasWifiPermission(context)) {
-                                WiFiCamerasActivity.launch(context)
+                                launchWifiFromHome()
                             } else if (activity != null) {
                                 pendingAction = FeatureAction.WIFI
                                 AppPermissionHelper.requestPermissionsOrOpenSettings(
@@ -251,7 +267,7 @@ fun HomePage() {
                         .fillMaxWidth()
                         .clickable {
                             if (BluetoothHelper.hasBluetoothPermission(context)) {
-                                BluetoothCamerasActivity.launch(context)
+                                launchBluetoothFromHome()
                             } else if (activity != null) {
                                 pendingAction = FeatureAction.BLUETOOTH
                                 AppPermissionHelper.requestPermissionsOrOpenSettings(
@@ -374,7 +390,11 @@ fun HomePage() {
                         .background(color = White, shape = RoundedCornerShape(10.dp))
                         .padding(horizontal = 15.dp)
                         .clickable {
-                            HistoryRecordActivity.launch(context)
+                            if (isSubscribed) {
+                                HistoryRecordActivity.launch(context)
+                            } else {
+                                SubscribeActivity.launch(context)
+                            }
                         }
                     ) {
                         Text("Detection history", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
