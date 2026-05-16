@@ -29,7 +29,7 @@ import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.theme.White
 
 @Composable
-fun RequestWifiPermissionView(dialog: BaseDialog) {
+fun RequestBluetoothPermissionView(dialog: BaseDialog) {
     val iconSize = 66.dp
     val iconOverlap = iconSize / 2
 
@@ -50,7 +50,7 @@ fun RequestWifiPermissionView(dialog: BaseDialog) {
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp)
                 )
             }
-            Text("Hiidden Camera Detect Master wants to enable WiFi.", color = Color(0xFF152946), fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 42.dp))
+            Text("Hiidden Camera Detect Master wants to enable Bluetooth.", color = Color(0xFF152946), fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 42.dp))
             Spacer(modifier = Modifier.height(30.dp))
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
                 Box(modifier = Modifier.clickable{ dialog.dismiss() }.weight(1f).height(46.dp).border(width = 1.dp, color = Color(0xFF152946), shape = RoundedCornerShape(10.dp))) {
@@ -65,7 +65,7 @@ fun RequestWifiPermissionView(dialog: BaseDialog) {
         }
 
         Image(
-            painter = painterResource(R.mipmap.img_wifi_big), // todo wifi图标有问题，应该给一个外层有白色圆环的图片
+            painter = painterResource(R.mipmap.img_blutooth_big), // todo wifi图标有问题，应该给一个外层有白色圆环的图片
             contentDescription = null,
             modifier = Modifier
                 .size(iconSize)

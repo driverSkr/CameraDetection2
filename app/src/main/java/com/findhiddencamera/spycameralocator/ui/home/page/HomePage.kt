@@ -42,8 +42,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import com.findhiddencamera.spycameralocator.BuildConfig
 import com.findhiddencamera.spycameralocator.R
+import com.findhiddencamera.spycameralocator.dialog.DialogHelper
 import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.theme.White50
 import com.findhiddencamera.spycameralocator.ui.bluetooth.BluetoothCamerasActivity
@@ -92,43 +94,29 @@ fun HomePage() {
         }
     }
 
-    val wifiPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) {
+    val wifiPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (pendingAction == FeatureAction.WIFI) {
             if (WifiHelper.hasWifiPermission(context)) {
                 launchWifiFromHome()
-            } else if (activity != null && AppPermissionHelper.shouldOpenSettings(
-                    activity,
-                    WifiHelper.requiredPermissions()
-                )
-            ) {
+            } else if (activity != null && AppPermissionHelper.shouldOpenSettings(activity, WifiHelper.requiredPermissions())) {
                 AppPermissionHelper.openAppPermissionSettings(activity)
             }
         }
         pendingAction = null
     }
 
-    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) {
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (pendingAction == FeatureAction.BLUETOOTH) {
             if (BluetoothHelper.hasBluetoothPermission(context)) {
                 launchBluetoothFromHome()
-            } else if (activity != null && AppPermissionHelper.shouldOpenSettings(
-                    activity,
-                    BluetoothHelper.requiredPermissions()
-                )
-            ) {
+            } else if (activity != null && AppPermissionHelper.shouldOpenSettings(activity, BluetoothHelper.requiredPermissions())) {
                 AppPermissionHelper.openAppPermissionSettings(activity)
             }
         }
         pendingAction = null
     }
 
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) {
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         val cameraPermission = arrayOf(Manifest.permission.CAMERA)
         if (pendingAction == FeatureAction.CAMERA) {
             if (AppPermissionHelper.hasPermissions(context, cameraPermission)) {
@@ -176,7 +164,8 @@ fun HomePage() {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
-                    SettingActivity.launch(context)
+//                    SettingActivity.launch(context)
+                    DialogHelper.requestBluetoothPermissionDialog(context as FragmentActivity)
                 })
             }
 

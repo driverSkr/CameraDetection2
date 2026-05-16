@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import com.findhiddencamera.spycameralocator.dialog.view.RequestBluetoothPermissionView
 import com.findhiddencamera.spycameralocator.dialog.view.RequestWifiPermissionView
 import com.findhiddencamera.spycameralocator.dialog.view.WifiInfoDetailsView
 import com.findhiddencamera.spycameralocator.model.WifiDevice
@@ -36,6 +37,18 @@ object DialogHelper {
             setContent {
                 ComposeProjectTheme {
                     RequestWifiPermissionView()
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    fun requestBluetoothPermissionDialog(activity: FragmentActivity) {
+        val (binding, dialog) = ComposeNativeDialog.composeBaseDialog(activity)
+        binding.composeView.apply {
+            setContent {
+                ComposeProjectTheme {
+                    RequestBluetoothPermissionView()
                 }
             }
         }
