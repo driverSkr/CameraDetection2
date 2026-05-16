@@ -68,7 +68,9 @@ private enum class FeatureAction {
 fun HomePage() {
     val context = LocalContext.current
     val activity = context.findActivity()
+    val isFirstHomeVisit = remember { DataHelper.isFirst(context, "enter_home_page") }
     var pendingAction by remember { mutableStateOf<FeatureAction?>(null) }
+    val detectNowColor = if (isFirstHomeVisit) Color(0xFFF53863) else Color(0xFF5672FF)
 
     val wifiPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -210,7 +212,7 @@ fun HomePage() {
                                 .background(color = White, shape = RoundedCornerShape(8.dp))
                                 .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
-                            Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text("Detect Now", color = detectNowColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -255,7 +257,7 @@ fun HomePage() {
                                 .background(color = White, shape = RoundedCornerShape(8.dp))
                                 .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
-                            Text("Detect Now", color = Color(0xFFF53863), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text("Detect Now", color = detectNowColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
