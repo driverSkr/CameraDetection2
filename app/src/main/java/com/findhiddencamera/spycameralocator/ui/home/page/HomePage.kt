@@ -429,7 +429,7 @@ fun HomePage() {
                         .background(color = White, shape = RoundedCornerShape(10.dp))
                         .padding(horizontal = 15.dp)
                         .clickable {
-
+                            // todo UI图未提供
                         }
                     ) {
                         Text("How it works", color = Color(0xFF152946), fontSize = 12.sp, fontWeight = FontWeight.Normal, modifier = Modifier.align(Alignment.CenterStart))
