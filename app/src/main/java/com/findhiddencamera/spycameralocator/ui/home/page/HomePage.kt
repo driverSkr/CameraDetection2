@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.findhiddencamera.spycameralocator.BuildConfig
 import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.theme.White50
@@ -55,6 +57,7 @@ import com.findhiddencamera.spycameralocator.ui.wifi.WiFiCamerasActivity
 import com.findhiddencamera.spycameralocator.utils.AppPermissionHelper
 import com.findhiddencamera.spycameralocator.utils.BluetoothHelper
 import com.findhiddencamera.spycameralocator.utils.DataHelper
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.WifiHelper
 import com.findhiddencamera.spycameralocator.utils.findActivity
 
@@ -71,6 +74,7 @@ fun HomePage() {
     val isFirstHomeVisit = remember { DataHelper.isFirst(context, "enter_home_page") }
     var pendingAction by remember { mutableStateOf<FeatureAction?>(null) }
     val detectNowColor = if (isFirstHomeVisit) Color(0xFFF53863) else Color(0xFF5672FF)
+    val isSubscribed by SubscribeHelper.isSubscribedFlow.collectAsState()
 
     val wifiPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -158,6 +162,31 @@ fun HomePage() {
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
                     SettingActivity.launch(context)
                 })
+            }
+
+            if (BuildConfig.DEBUG) {
+                // TODO Remove this temporary subscription toggle before release verification.
+                Box(
+                    modifier = Modifier
+                        .padding(top = 10.dp)
+                        .background(color = Color(0xFFF53863), shape = RoundedCornerShape(8.dp))
+                        .clickable {
+                            SubscribeHelper.updateSubscribeState(!isSubscribed)
+                            Toast.makeText(
+                                context,
+                                "Debug subscription: ${if (!isSubscribed) "ON" else "OFF"}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        "DEBUG 订阅状态: ${if (isSubscribed) "ON" else "OFF"}",
+                        color = White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
