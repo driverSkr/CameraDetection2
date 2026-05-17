@@ -32,6 +32,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CameraDetection">
         <activity
+            android:name=".ui.subscribe.GuideSubscribeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.result.WifiDetectDetailActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

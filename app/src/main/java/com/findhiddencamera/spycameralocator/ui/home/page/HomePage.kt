@@ -57,6 +57,7 @@ import com.findhiddencamera.spycameralocator.ui.camera.CameraScannerActivity
 import com.findhiddencamera.spycameralocator.ui.history.HistoryRecordActivity
 import com.findhiddencamera.spycameralocator.ui.magnetic.MagneticFieldActivity
 import com.findhiddencamera.spycameralocator.ui.setting.SettingActivity
+import com.findhiddencamera.spycameralocator.ui.subscribe.GuideSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.SplashScreenSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.SubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.WiFiCamerasActivity
@@ -236,7 +237,8 @@ fun HomePage() {
                         .width(61.dp)
                         .height(26.dp)
                         .clickable {
-                            SubscribeActivity.launch(context)
+//                            SubscribeActivity.launch(context)
+                            GuideSubscribeActivity.launch(context)
                         }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
