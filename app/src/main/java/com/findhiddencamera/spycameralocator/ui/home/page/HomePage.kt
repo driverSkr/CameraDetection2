@@ -8,7 +8,6 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import com.findhiddencamera.spycameralocator.BuildConfig
 import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.dialog.DialogHelper
@@ -57,7 +57,6 @@ import com.findhiddencamera.spycameralocator.ui.camera.CameraScannerActivity
 import com.findhiddencamera.spycameralocator.ui.history.HistoryRecordActivity
 import com.findhiddencamera.spycameralocator.ui.magnetic.MagneticFieldActivity
 import com.findhiddencamera.spycameralocator.ui.setting.SettingActivity
-import com.findhiddencamera.spycameralocator.ui.subscribe.GuideSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.SplashScreenSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.SubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.WiFiCamerasActivity
@@ -242,8 +241,7 @@ fun HomePage() {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
-//                    SettingActivity.launch(context)
-                    DialogHelper.guideCheckDialog(context as FragmentActivity)
+                    SettingActivity.launch(context)
                 })
             }
 

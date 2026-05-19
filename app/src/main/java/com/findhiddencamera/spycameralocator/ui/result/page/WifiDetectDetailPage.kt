@@ -1,6 +1,13 @@
 package com.findhiddencamera.spycameralocator.ui.result.page
 
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +50,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ethan.pay.utils.SubHelper
 import com.findhiddencamera.spycameralocator.R
+import com.findhiddencamera.spycameralocator.dialog.DialogHelper
 import com.findhiddencamera.spycameralocator.dialog.rememberLoadingDialog
 import com.findhiddencamera.spycameralocator.model.SubModel
 import com.findhiddencamera.spycameralocator.model.WifiDevice
@@ -51,6 +59,10 @@ import com.findhiddencamera.spycameralocator.ui.camera.CameraScannerActivity
 import com.findhiddencamera.spycameralocator.ui.magnetic.MagneticFieldActivity
 import com.findhiddencamera.spycameralocator.ui.result.view.WifiRiskLampView
 import com.findhiddencamera.spycameralocator.ui.subscribe.viewmodel.SubscribeViewModel
+import com.findhiddencamera.spycameralocator.ui.bluetooth.BluetoothCamerasActivity
+import com.findhiddencamera.spycameralocator.utils.AppPermissionHelper
+import com.findhiddencamera.spycameralocator.utils.BluetoothHelper
+import com.findhiddencamera.spycameralocator.utils.DetectionSessionHelper
 import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.findActivity
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
@@ -67,6 +79,7 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
     val dialog = rememberLoadingDialog()
     val subscribeViewModel = context.findBaseActivityVBind()?.let { viewModel<SubscribeViewModel>(it) }
     var monthlyProduct by remember { mutableStateOf<SubModel?>(null) }
+    var isGuideDialogShowing by remember { mutableStateOf(false) }
     val lockedHazeStyle = remember {
         HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp)
     }
@@ -83,6 +96,110 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
             dialog.value = false
             Toast.makeText(context, "no product", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    lateinit var checkBluetoothPermissionAndLaunch: () -> Unit
+    lateinit var openBluetoothSettingsForScan: () -> Unit
+
+    fun launchBluetoothDetectAndClose() {
+        val activity = context.findActivity() as? FragmentActivity
+        if (activity != null) {
+            BluetoothCamerasActivity.launch(activity)
+            activity.finish()
+        } else {
+            context.findBaseActivityVBind()?.finish()
+        }
+    }
+
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        val activity = context.findActivity() as? FragmentActivity
+        if (BluetoothHelper.hasBluetoothPermission(context)) {
+            launchBluetoothDetectAndClose()
+        } else if (activity != null && AppPermissionHelper.shouldOpenSettings(activity, BluetoothHelper.requiredPermissions())) {
+            AppPermissionHelper.openAppPermissionSettings(activity)
+            activity.finish()
+        } else {
+            context.findBaseActivityVBind()?.finish()
+        }
+    }
+
+    val bluetoothEnableLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (BluetoothHelper.isBluetoothEnabled(context)) {
+            checkBluetoothPermissionAndLaunch()
+        } else {
+            context.findBaseActivityVBind()?.finish()
+        }
+    }
+
+    checkBluetoothPermissionAndLaunch = {
+        val activity = context.findActivity() as? FragmentActivity
+        if (BluetoothHelper.hasBluetoothPermission(context)) {
+            launchBluetoothDetectAndClose()
+        } else if (activity != null) {
+            AppPermissionHelper.requestPermissionsOrOpenSettings(
+                activity,
+                BluetoothHelper.requiredPermissions(),
+                bluetoothPermissionLauncher
+            )
+        } else {
+            context.findBaseActivityVBind()?.finish()
+        }
+    }
+
+    openBluetoothSettingsForScan = {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+        } else {
+            @Suppress("DEPRECATION")
+            Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        }
+        bluetoothEnableLauncher.launch(intent)
+    }
+
+    fun startBluetoothDetectFromGuide() {
+        val activity = context.findActivity() as? FragmentActivity
+        if (activity == null) {
+            context.findBaseActivityVBind()?.finish()
+            return
+        }
+        if (!BluetoothHelper.isBluetoothEnabled(context)) {
+            DialogHelper.requestBluetoothPermissionDialog(
+                activity = activity,
+                onAllow = {
+                    openBluetoothSettingsForScan()
+                },
+                onCancel = {
+                    activity.finish()
+                }
+            )
+            return
+        }
+        checkBluetoothPermissionAndLaunch()
+    }
+
+    fun exitDetailPage() {
+        val activity = context.findActivity() as? FragmentActivity
+        val baseActivity = context.findBaseActivityVBind()
+        if (!isSubscribed && !DetectionSessionHelper.hasBluetoothDetected && activity != null && !isGuideDialogShowing) {
+            isGuideDialogShowing = true
+            DialogHelper.guideCheckDialog(
+                activity = activity,
+                content = "Hide & Spy Cameras stream your video to nearby devices via Bluetooth, so be sure to check as soon as possible.",
+                imageRes = R.mipmap.img_bluetooth_radar_plate,
+                onStart = {
+                    startBluetoothDetectFromGuide()
+                },
+                onCancel = {
+                    baseActivity?.finish()
+                }
+            )
+        } else {
+            baseActivity?.finish()
+        }
+    }
+
+    BackHandler {
+        exitDetailPage()
     }
 
     LaunchedEffect(Unit) {
@@ -108,7 +225,7 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
                     if (isSubscribed) {
                         Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp)) {
                             Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
-                                context.findBaseActivityVBind()?.finish()
+                                exitDetailPage()
                             })
                             Text("Details", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
                         }
@@ -185,7 +302,7 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
                     // 顶部栏和角标作为清晰层最后绘制，避免被 hazeChild 覆盖。
                     Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp)) {
                         Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
-                            context.findBaseActivityVBind()?.finish()
+                            exitDetailPage()
                         })
                         Text("Details", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
                     }

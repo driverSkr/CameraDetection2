@@ -29,7 +29,11 @@ import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.theme.White
 
 @Composable
-fun RequestWifiPermissionView(dialog: BaseDialog, onAllow: () -> Unit = {}) {
+fun RequestWifiPermissionView(
+    dialog: BaseDialog,
+    onAllow: () -> Unit = {},
+    onCancel: () -> Unit = {}
+) {
     val iconSize = 66.dp
     val iconOverlap = iconSize / 2
 
@@ -50,13 +54,19 @@ fun RequestWifiPermissionView(dialog: BaseDialog, onAllow: () -> Unit = {}) {
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .padding(end = 10.dp)
-                        .clickable { dialog.dismiss() }
+                        .clickable {
+                            onCancel()
+                            dialog.dismiss()
+                        }
                 )
             }
             Text("Hiidden Camera Detect Master wants to enable WiFi.", color = Color(0xFF152946), fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 42.dp))
             Spacer(modifier = Modifier.height(30.dp))
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
-                Box(modifier = Modifier.clickable{ dialog.dismiss() }.weight(1f).height(46.dp).border(width = 1.dp, color = Color(0xFF152946), shape = RoundedCornerShape(10.dp))) {
+                Box(modifier = Modifier.clickable{
+                    onCancel()
+                    dialog.dismiss()
+                }.weight(1f).height(46.dp).border(width = 1.dp, color = Color(0xFF152946), shape = RoundedCornerShape(10.dp))) {
                     Text("Not allow", color = Color(0xFF152946), fontSize = 16.sp, modifier = Modifier.align(Alignment.Center))
                 }
                 Spacer(modifier = Modifier.width(20.dp))

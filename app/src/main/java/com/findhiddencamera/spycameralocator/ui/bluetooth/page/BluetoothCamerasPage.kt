@@ -73,6 +73,7 @@ import com.findhiddencamera.spycameralocator.ui.result.BluetoothScanResultActivi
 import com.findhiddencamera.spycameralocator.ui.subscribe.GuideSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.view.RandomRedDotsWithVisibility
 import com.findhiddencamera.spycameralocator.utils.BluetoothHelper
+import com.findhiddencamera.spycameralocator.utils.DetectionSessionHelper
 import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import kotlinx.coroutines.delay
@@ -125,6 +126,7 @@ fun BluetoothCamerasPage() {
     }
 
     LaunchedEffect(Unit) {
+        DetectionSessionHelper.markBluetoothDetected()
         simulateScanProgress(detectProgress, isAnimating)
     }
 

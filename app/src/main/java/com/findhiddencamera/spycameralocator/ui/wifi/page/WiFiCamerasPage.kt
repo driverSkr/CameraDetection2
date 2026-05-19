@@ -59,6 +59,7 @@ import com.findhiddencamera.spycameralocator.ui.result.WifiDetectResultActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.GuideSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.view.RadarScannerWithControls2
 import com.findhiddencamera.spycameralocator.ui.wifi.view.RandomRedDotsWithVisibility
+import com.findhiddencamera.spycameralocator.utils.DetectionSessionHelper
 import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.WifiHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
@@ -127,6 +128,7 @@ fun WiFiCamerasPage() {
     }
 
     LaunchedEffect(Unit) {
+        DetectionSessionHelper.markWifiDetected()
         simulateScanProgress(detectProgress, isAnimating)
     }
 
