@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -32,14 +33,13 @@ import com.findhiddencamera.spycameralocator.model.WifiDevice
 import com.findhiddencamera.spycameralocator.theme.White
 
 @Composable
-fun WifiInfoItemView(info: WifiDevice, onClick: () -> Unit) {
+fun WifiInfoItemView(modifier: Modifier, info: WifiDevice, onClick: () -> Unit) {
     val risk = riskUi(info)
     val typeLabel = info.displayType()
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
+        modifier = modifier
+            .fillMaxSize()
             .shadow(elevation = 7.dp, shape = RoundedCornerShape(8.dp), clip = false)
             .border(width = 1.dp, color = Color(0x0D5874FF), shape = RoundedCornerShape(8.dp))
             .background(color = White, shape = RoundedCornerShape(8.dp))

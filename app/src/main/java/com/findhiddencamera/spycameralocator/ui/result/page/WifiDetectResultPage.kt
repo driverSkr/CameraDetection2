@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,16 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.model.WifiDevice
-import com.findhiddencamera.spycameralocator.theme.Black
-import com.findhiddencamera.spycameralocator.theme.LightGray
-import com.findhiddencamera.spycameralocator.theme.Transparent
 import com.findhiddencamera.spycameralocator.theme.White
-import com.findhiddencamera.spycameralocator.theme.White50
 import com.findhiddencamera.spycameralocator.ui.result.WifiDetectDetailActivity
 import com.findhiddencamera.spycameralocator.ui.result.view.WifiInfoItemView
 import com.findhiddencamera.spycameralocator.ui.subscribe.SubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.WiFiCamerasActivity
-import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
@@ -73,7 +67,6 @@ fun WifiDetectResultPage(
         buildResultDevices(suspiciousDevices, trustedDevices)
     }
 
-    val isSubscribed = SubscribeHelper.isSubscribedFlow.collectAsState().value
     val cameraDevices = remember(devices) { devices.filter { it.isCameraDevice() } }
     val wifiTrafficDevices = remember(devices) { devices.filterNot { it.isCameraDevice() } }
     val totalCount = devices.size
@@ -146,17 +139,15 @@ fun WifiDetectResultPage(
                             }
 
                             // 未订阅用户使用高斯模糊遮住关键数据
-                            if (!isSubscribed) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .border(width = 1.dp, color = Color(0xFF5874FF).copy(alpha = 0.08f), shape = RoundedCornerShape(10.dp))
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
-                                        .clickable {  }
-                                ) {
-                                    Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.align(Alignment.Center).size(32.dp))
-                                }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .border(width = 1.dp, color = Color(0xFF5874FF).copy(alpha = 0.08f), shape = RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
+                                    .clickable {  }
+                            ) {
+                                Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.align(Alignment.Center).size(32.dp))
                             }
                         }
 
@@ -196,8 +187,16 @@ fun WifiDetectResultPage(
                         }
                         items(cameraDevices.size) { index ->
                             val device = cameraDevices[index]
-                            WifiInfoItemView(device) {
-                                WifiDetectDetailActivity.launch(context, device)
+                            Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
+                                WifiInfoItemView(modifier = Modifier.haze(lockedCountHazeState),device) {
+                                    WifiDetectDetailActivity.launch(context, device)
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
+                                )
                             }
                         }
                     }
@@ -211,8 +210,15 @@ fun WifiDetectResultPage(
                     }
                     items(wifiTrafficDevices.size) { index ->
                         val device = wifiTrafficDevices[index]
-                        WifiInfoItemView(device) {
-                            WifiDetectDetailActivity.launch(context, device)
+                        Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
+                            WifiInfoItemView(modifier = Modifier.haze(lockedCountHazeState),device) {
+                                WifiDetectDetailActivity.launch(context, device)
+                            }
+                            Box(modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp))
+                                .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
+                            )
                         }
                     }
                 }
