@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -256,9 +257,7 @@ fun WiFiCamerasPage() {
 
         WifiScanProgressBar(
             progress = displayedProgress.value,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 40.dp)
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
         Spacer(modifier = Modifier.height(22.dp))
@@ -293,8 +292,8 @@ private fun WifiScanProgressBar(
     progress: Float,
     modifier: Modifier = Modifier
 ) {
-    val progressColor = Color(0xFF8095FF)
-    val trackColor = Color(0xFFF0F2FF)
+    val progressColor = Color(0xFF7F95FF)
+    val trackColor = Color(0xFF5672FF).copy(alpha = 0.2f)
     val currentProgress = progress.coerceIn(0f, 1f)
     val textMeasurer = rememberTextMeasurer()
     val progressText = "${(currentProgress * 100f).roundToInt()}%"
@@ -307,31 +306,37 @@ private fun WifiScanProgressBar(
         )
     )
 
-    Canvas(modifier = modifier.height(24.dp)) {
-        val trackHeight = 7.dp.toPx()
+    Canvas(modifier = modifier.width(300.dp).height(24.dp)) {
+        val trackHeight = 12.dp.toPx()
+        val trackPadding = 2.dp.toPx()
+        val trackCornerRadius = 6.dp.toPx()
         val trackTop = (size.height - trackHeight) / 2f
-        val cornerRadius = CornerRadius(trackHeight / 2f, trackHeight / 2f)
-        val progressWidth = size.width * currentProgress
+        val trackWidth = size.width
+        val progressTop = trackTop + trackPadding
+        val progressHeight = trackHeight - trackPadding * 2
+        val progressWidth = (trackWidth - trackPadding * 2) * currentProgress
 
         drawRoundRect(
             color = trackColor,
             topLeft = Offset(0f, trackTop),
-            size = Size(size.width, trackHeight),
-            cornerRadius = cornerRadius
+            size = Size(trackWidth, trackHeight),
+            cornerRadius = CornerRadius(trackCornerRadius, trackCornerRadius)
         )
 
         if (progressWidth > 0f) {
             drawRoundRect(
                 color = progressColor,
-                topLeft = Offset(0f, trackTop),
-                size = Size(progressWidth, trackHeight),
-                cornerRadius = cornerRadius
+                topLeft = Offset(trackPadding, progressTop),
+                size = Size(progressWidth, progressHeight),
+                cornerRadius = CornerRadius(trackCornerRadius, trackCornerRadius)
             )
         }
 
-        val bubbleWidth = 34.dp.toPx()
-        val bubbleHeight = 18.dp.toPx()
-        val bubbleCenterX = progressWidth.coerceIn(bubbleWidth / 2f, size.width - bubbleWidth / 2f)
+        val bubbleWidth = 38.dp.toPx()
+        val bubbleHeight = 22.dp.toPx()
+        val bubbleCornerRadius = 11.dp.toPx()
+        val bubbleBorderWidth = 2.dp.toPx()
+        val bubbleCenterX = (trackPadding + progressWidth).coerceIn(bubbleWidth / 2f, size.width - bubbleWidth / 2f)
         val bubbleTop = (size.height - bubbleHeight) / 2f
         val bubbleLeft = bubbleCenterX - bubbleWidth / 2f
 
@@ -339,7 +344,15 @@ private fun WifiScanProgressBar(
             color = progressColor,
             topLeft = Offset(bubbleLeft, bubbleTop),
             size = Size(bubbleWidth, bubbleHeight),
-            cornerRadius = CornerRadius(bubbleHeight / 2f, bubbleHeight / 2f)
+            cornerRadius = CornerRadius(bubbleCornerRadius, bubbleCornerRadius)
+        )
+
+        drawRoundRect(
+            color = Color.White,
+            topLeft = Offset(bubbleLeft, bubbleTop),
+            size = Size(bubbleWidth, bubbleHeight),
+            cornerRadius = CornerRadius(bubbleCornerRadius, bubbleCornerRadius),
+            style = Stroke(width = bubbleBorderWidth)
         )
 
         drawText(
