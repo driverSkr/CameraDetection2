@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -32,14 +33,19 @@ import com.findhiddencamera.spycameralocator.model.BluetoothDevice
 import com.findhiddencamera.spycameralocator.theme.White
 
 @Composable
-fun BluetoothInfoDevice(info: BluetoothDevice, onClick: () -> Unit) {
+fun BluetoothInfoDevice(
+    modifier: Modifier = Modifier,
+    info: BluetoothDevice,
+    showRiskLamp: Boolean = true,
+    showSignalBlocks: Boolean = true,
+    onClick: () -> Unit
+) {
     val risk = riskUi(info)
     val typeLabel = info.displayType()
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
+        modifier = modifier
+            .fillMaxSize()
             .shadow(elevation = 7.dp, shape = RoundedCornerShape(8.dp), clip = false)
             .border(width = 1.dp, color = Color(0x0D5874FF), shape = RoundedCornerShape(8.dp))
             .background(color = White, shape = RoundedCornerShape(8.dp))
@@ -47,7 +53,7 @@ fun BluetoothInfoDevice(info: BluetoothDevice, onClick: () -> Unit) {
             .padding(start = 10.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        DeviceTypeIcon(type = typeLabel, risk = risk)
+        DeviceTypeIcon(type = typeLabel, risk = risk, showRiskLamp = showRiskLamp)
 
         Spacer(modifier = Modifier.width(10.dp))
 
@@ -75,12 +81,32 @@ fun BluetoothInfoDevice(info: BluetoothDevice, onClick: () -> Unit) {
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        SignalBlocks(activeBlocks = risk.signalBlocks, color = risk.color)
+        if (showSignalBlocks) {
+            SignalBlocks(activeBlocks = risk.signalBlocks, color = risk.color)
+        } else {
+            // 隐藏信号格时保留同等占位，避免底层模糊内容和上层清晰信号格错位。
+            Spacer(modifier = Modifier.width(21.dp).height(5.dp))
+        }
     }
 }
 
 @Composable
-private fun DeviceTypeIcon(type: String, risk: BluetoothRiskUi) {
+fun BluetoothRiskLampView(info: BluetoothDevice, modifier: Modifier = Modifier) {
+    RiskLamp(risk = riskUi(info), modifier = modifier)
+}
+
+@Composable
+fun BluetoothSignalBlocksView(info: BluetoothDevice, modifier: Modifier = Modifier) {
+    val risk = riskUi(info)
+    SignalBlocks(
+        activeBlocks = risk.signalBlocks,
+        color = risk.color,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun DeviceTypeIcon(type: String, risk: BluetoothRiskUi, showRiskLamp: Boolean) {
     val iconRes = when (type.lowercase()) {
         "camera" -> R.drawable.svg_camera
         "computer" -> R.drawable.svg_pc
@@ -109,10 +135,12 @@ private fun DeviceTypeIcon(type: String, risk: BluetoothRiskUi) {
                 modifier = Modifier.align(Alignment.Center).size(20.dp)
             )
         }
-        RiskLamp(
-            risk = risk,
-            modifier = Modifier.align(Alignment.TopEnd).offset(x = 5.dp, y = (-5).dp)
-        )
+        if (showRiskLamp) {
+            RiskLamp(
+                risk = risk,
+                modifier = Modifier.align(Alignment.TopEnd).offset(x = 5.dp, y = (-5).dp)
+            )
+        }
     }
 }
 
@@ -134,8 +162,8 @@ private fun RiskLamp(risk: BluetoothRiskUi, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SignalBlocks(activeBlocks: Int, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+private fun SignalBlocks(activeBlocks: Int, color: Color, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         repeat(3) { index ->
             Box(
                 modifier = Modifier

@@ -2,6 +2,7 @@ package com.findhiddencamera.spycameralocator.ui.result.page
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,13 +14,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -34,7 +41,15 @@ import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.ui.bluetooth.BluetoothCamerasActivity
 import com.findhiddencamera.spycameralocator.ui.result.BluetoothScanDetailActivity
 import com.findhiddencamera.spycameralocator.ui.result.view.BluetoothInfoDevice
+import com.findhiddencamera.spycameralocator.ui.result.view.BluetoothRiskLampView
+import com.findhiddencamera.spycameralocator.ui.result.view.BluetoothSignalBlocksView
+import com.findhiddencamera.spycameralocator.ui.subscribe.SplashScreenSubscribeActivity
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,7 +60,9 @@ fun BluetoothScanResultPage(
     trustedDevices: List<BluetoothDevice>?,
     scanTimeSeconds: Long = System.currentTimeMillis().div(1000)
 ) {
+    val lockedCountHazeState = remember { HazeState() }
     val context = LocalContext.current
+    val isSubscribed by SubscribeHelper.isSubscribedFlow.collectAsState()
     val scanTimeText = remember(scanTimeSeconds) { formatScanTime(scanTimeSeconds) }
     val devices = remember(suspiciousDevices, trustedDevices) {
         buildResultDevices(suspiciousDevices, trustedDevices)
@@ -56,6 +73,9 @@ fun BluetoothScanResultPage(
     val cameraCount = cameraDevices.size
     val hasCamera = cameraCount > 0
     val summaryColor = Color(0xFFF53863)
+    val lockedHazeStyle = remember {
+        HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp)
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
         Image(
@@ -96,25 +116,46 @@ fun BluetoothScanResultPage(
             ) {
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            Text(
-                                text = if (hasCamera) "$cameraCount" else "$totalCount",
-                                color = summaryColor,
-                                fontSize = 40.sp,
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 40.sp
-                            )
-                            if (hasCamera) {
-                                Text(
-                                    text = "/$totalCount",
-                                    color = summaryColor,
-                                    fontSize = 23.sp,
-                                    fontWeight = FontWeight.W600,
-                                    lineHeight = 33.sp
-                                )
+                        Box(modifier = Modifier.height(64.dp).width(194.dp).align(Alignment.CenterHorizontally)) {
+                            Box(
+                                modifier = if (isSubscribed) Modifier.fillMaxSize() else Modifier.fillMaxSize().haze(lockedCountHazeState),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = if (hasCamera) "$cameraCount" else "$totalCount",
+                                        color = summaryColor,
+                                        fontSize = 40.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        lineHeight = 40.sp
+                                    )
+                                    if (hasCamera) {
+                                        Text(
+                                            text = "/$totalCount",
+                                            color = summaryColor,
+                                            fontSize = 23.sp,
+                                            fontWeight = FontWeight.W600,
+                                            lineHeight = 33.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (!isSubscribed) {
+                                // 未订阅用户使用真实扫描数据参与高斯模糊，点击后走订阅页关闭再进详情链路。
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(width = 1.dp, color = Color(0xFF5874FF).copy(alpha = 0.08f), shape = RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .hazeChild(lockedCountHazeState, style = lockedHazeStyle)
+                                        .clickable {
+                                            devices.firstOrNull()?.let { openLockedBluetoothDetail(context, it) }
+                                                ?: SplashScreenSubscribeActivity.launch(context)
+                                        }
+                                ) {
+                                    Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.align(Alignment.Center).size(32.dp))
+                                }
                             }
                         }
                         Spacer(modifier = Modifier.height(14.dp))
@@ -151,10 +192,22 @@ fun BluetoothScanResultPage(
                         item {
                             ResultSectionHeader(title = "Cameras")
                         }
-                        items(cameraDevices.size) { index ->
+                        items(
+                            count = cameraDevices.size,
+                            key = { index -> cameraDevices[index].stableListKey() }
+                        ) { index ->
                             val device = cameraDevices[index]
-                            BluetoothInfoDevice(device) {
-                                BluetoothScanDetailActivity.launch(context, device)
+                            if (isSubscribed) {
+                                BluetoothInfoDevice(modifier = Modifier.fillMaxWidth().height(56.dp), info = device) {
+                                    BluetoothScanDetailActivity.launch(context, device)
+                                }
+                            } else {
+                                LockedBluetoothInfoDevice(
+                                    device = device,
+                                    lockedHazeStyle = lockedHazeStyle
+                                ) {
+                                    openLockedBluetoothDetail(context, device)
+                                }
                             }
                         }
                     }
@@ -162,15 +215,64 @@ fun BluetoothScanResultPage(
                     item {
                         ResultSectionHeader(title = "Devices transmitting traffic via Bluetooth")
                     }
-                    items(bluetoothTrafficDevices.size) { index ->
+                    items(
+                        count = bluetoothTrafficDevices.size,
+                        key = { index -> bluetoothTrafficDevices[index].stableListKey() }
+                    ) { index ->
                         val device = bluetoothTrafficDevices[index]
-                        BluetoothInfoDevice(device) {
-                            BluetoothScanDetailActivity.launch(context, device)
+                        if (isSubscribed) {
+                            BluetoothInfoDevice(modifier = Modifier.fillMaxWidth().height(56.dp), info = device) {
+                                BluetoothScanDetailActivity.launch(context, device)
+                            }
+                        } else {
+                            LockedBluetoothInfoDevice(
+                                device = device,
+                                lockedHazeStyle = lockedHazeStyle
+                            ) {
+                                openLockedBluetoothDetail(context, device)
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LockedBluetoothInfoDevice(
+    device: BluetoothDevice,
+    lockedHazeStyle: HazeStyle,
+    onClick: () -> Unit
+) {
+    // 每个锁定卡片单独持有 HazeState，保留独立采样，避免不同 item 之间的模糊缓存互相影响。
+    val itemHazeState = remember(device.mac, device.name) { HazeState() }
+
+    Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
+        BluetoothInfoDevice(
+            modifier = Modifier.haze(itemHazeState),
+            info = device,
+            showRiskLamp = false,
+            showSignalBlocks = false
+        ) {
+            onClick.invoke()
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { onClick.invoke() }
+                .hazeChild(itemHazeState, style = lockedHazeStyle)
+        )
+        // 风险角标和右侧信号格作为清晰层单独绘制，不参与底层 haze 采样。
+        BluetoothRiskLampView(
+            info = device,
+            modifier = Modifier.align(Alignment.TopStart).padding(start = 37.dp, top = 5.dp)
+        )
+        BluetoothSignalBlocksView(
+            info = device,
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp).clickable { onClick.invoke() }
+        )
     }
 }
 
@@ -206,6 +308,16 @@ private fun buildResultDevices(
                 .thenBy { it.riskSortOrder() }
                 .thenBy { it.displayNameForSort() }
         )
+}
+
+private fun openLockedBluetoothDetail(context: android.content.Context, device: BluetoothDevice) {
+    // 未订阅锁定态先打开开屏订阅页，只有该入口关闭订阅页后才进入对应设备详情。
+    SplashScreenSubscribeActivity.launchForDeviceDetailAfterClose(context, device)
+}
+
+private fun BluetoothDevice.stableListKey(): String {
+    // LazyColumn 使用稳定 key，降低列表复用时 haze 缓存和设备数据错位的概率。
+    return mac.ifBlank { name }
 }
 
 private fun BluetoothDevice.isCameraDevice(): Boolean {

@@ -9,9 +9,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import com.findhiddencamera.spycameralocator.base.BaseActivityVBind
 import com.findhiddencamera.spycameralocator.databinding.LayoutComposeContainerBinding
+import com.findhiddencamera.spycameralocator.model.BluetoothDevice
 import com.findhiddencamera.spycameralocator.model.WifiDevice
 import com.findhiddencamera.spycameralocator.theme.ComposeProjectTheme
 import com.findhiddencamera.spycameralocator.theme.Transparent
+import com.findhiddencamera.spycameralocator.ui.result.BluetoothScanDetailActivity
 import com.findhiddencamera.spycameralocator.ui.result.WifiDetectDetailActivity
 import com.findhiddencamera.spycameralocator.ui.subscribe.page.SplashScreenSubscribePage
 import com.skydoves.bundler.bundle
@@ -28,17 +30,25 @@ class SplashScreenSubscribeActivity : BaseActivityVBind<LayoutComposeContainerBi
 
         fun launchForDeviceDetailAfterClose(context: Context, device: WifiDevice) {
             context.intentOf<SplashScreenSubscribeActivity> {
-                +("deviceDetailAfterClose" to device)
+                +("wifiDeviceDetailAfterClose" to device)
+                startActivity(context)
+            }
+        }
+
+        fun launchForDeviceDetailAfterClose(context: Context, device: BluetoothDevice) {
+            context.intentOf<SplashScreenSubscribeActivity> {
+                +("bluetoothDeviceDetailAfterClose" to device)
                 startActivity(context)
             }
         }
     }
 
-    private val deviceDetailAfterClose by bundle<WifiDevice>("deviceDetailAfterClose")
+    private val wifiDeviceDetailAfterClose by bundle<WifiDevice>("wifiDeviceDetailAfterClose")
+    private val bluetoothDeviceDetailAfterClose by bundle<BluetoothDevice>("bluetoothDeviceDetailAfterClose")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (deviceDetailAfterClose != null) {
+        if (wifiDeviceDetailAfterClose != null || bluetoothDeviceDetailAfterClose != null) {
             onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     closeAndOpenDeviceDetail()
@@ -63,10 +73,14 @@ class SplashScreenSubscribeActivity : BaseActivityVBind<LayoutComposeContainerBi
     }
 
     private fun closeAndOpenDeviceDetail() {
-        val device = deviceDetailAfterClose
-        if (device != null) {
+        val wifiDevice = wifiDeviceDetailAfterClose
+        val bluetoothDevice = bluetoothDeviceDetailAfterClose
+        if (wifiDevice != null) {
             // 仅锁定结果入口携带该参数，关闭开屏订阅页后进入对应设备详情。
-            WifiDetectDetailActivity.launch(this, device)
+            WifiDetectDetailActivity.launch(this, wifiDevice)
+        } else if (bluetoothDevice != null) {
+            // 仅锁定结果入口携带该参数，关闭开屏订阅页后进入对应设备详情。
+            BluetoothScanDetailActivity.launch(this, bluetoothDevice)
         }
         finish()
     }
