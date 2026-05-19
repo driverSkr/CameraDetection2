@@ -237,8 +237,7 @@ fun HomePage() {
                         .width(61.dp)
                         .height(26.dp)
                         .clickable {
-//                            SubscribeActivity.launch(context)
-                            GuideSubscribeActivity.launch(context)
+                            SubscribeActivity.launch(context)
                         }
                 )
                 Spacer(modifier = Modifier.width(12.dp))

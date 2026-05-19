@@ -56,8 +56,10 @@ import com.findhiddencamera.spycameralocator.model.DetectWifiDevice
 import com.findhiddencamera.spycameralocator.model.WifiDevice
 import com.findhiddencamera.spycameralocator.room.DetectDataBase
 import com.findhiddencamera.spycameralocator.ui.result.WifiDetectResultActivity
+import com.findhiddencamera.spycameralocator.ui.subscribe.GuideSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.view.RadarScannerWithControls2
 import com.findhiddencamera.spycameralocator.ui.wifi.view.RandomRedDotsWithVisibility
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.WifiHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import com.stealthcopter.networktools.SubnetDevices
@@ -182,7 +184,12 @@ fun WiFiCamerasPage() {
                     trustedDevices = trustedDevicesList
                 )
             )
-            WifiDetectResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
+            // 检测记录先入库，再根据订阅状态决定是否展示结果引导订阅页。
+            if (SubscribeHelper.isSubscribed) {
+                WifiDetectResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
+            } else {
+                GuideSubscribeActivity.launchForWifi(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
+            }
             context.findBaseActivityVBind()?.finish()
         }
     }

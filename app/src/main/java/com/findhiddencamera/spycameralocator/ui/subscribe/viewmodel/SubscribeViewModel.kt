@@ -133,6 +133,13 @@ class SubscribeViewModel: ViewModel() {
                     // 支付成功后立即更新全局订阅状态，避免等待页面重新进入前台。
                     SubscribeHelper.updateSubscribeState(true)
                     SubscribeHelper.refreshSubscribeState()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        if (model?.offerId.isNullOrBlank()) {
+                            isBuySuccess.value = 1
+                        } else {
+                            isBuyDiscordSuccess.value = 1
+                        }
+                    }
                 }
 
                 override fun onOwned(orderList: MutableList<OrderInfo>) {
@@ -140,6 +147,13 @@ class SubscribeViewModel: ViewModel() {
                     // 已拥有也视为订阅有效，并后台同步一次真实订单列表。
                     SubscribeHelper.updateSubscribeState(true)
                     SubscribeHelper.refreshSubscribeState()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        if (model?.offerId.isNullOrBlank()) {
+                            isBuySuccess.value = 1
+                        } else {
+                            isBuyDiscordSuccess.value = 1
+                        }
+                    }
                 }
 
                 override fun onFailed(msg: String?) {

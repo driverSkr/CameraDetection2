@@ -70,8 +70,10 @@ import com.findhiddencamera.spycameralocator.model.DetectBluetoothDevice
 import com.findhiddencamera.spycameralocator.room.DetectDataBase
 import com.findhiddencamera.spycameralocator.ui.bluetooth.view.RadarScannerWithControls3
 import com.findhiddencamera.spycameralocator.ui.result.BluetoothScanResultActivity
+import com.findhiddencamera.spycameralocator.ui.subscribe.GuideSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.view.RandomRedDotsWithVisibility
 import com.findhiddencamera.spycameralocator.utils.BluetoothHelper
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import kotlinx.coroutines.delay
 import kotlin.math.max
@@ -182,7 +184,12 @@ fun BluetoothCamerasPage() {
                     trustedDevices = trustedDevicesList
                 )
             )
-            BluetoothScanResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
+            // 检测记录先入库，再根据订阅状态决定是否展示结果引导订阅页。
+            if (SubscribeHelper.isSubscribed) {
+                BluetoothScanResultActivity.launch(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
+            } else {
+                GuideSubscribeActivity.launchForBluetooth(context, suspiciousDevicesList, trustedDevicesList, scanTimeSeconds)
+            }
             context.findBaseActivityVBind()?.finish()
         }
     }
