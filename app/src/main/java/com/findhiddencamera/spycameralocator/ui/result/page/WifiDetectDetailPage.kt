@@ -1,5 +1,6 @@
 package com.findhiddencamera.spycameralocator.ui.result.page
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,7 +23,12 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,11 +39,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ethan.pay.utils.SubHelper
 import com.findhiddencamera.spycameralocator.R
+import com.findhiddencamera.spycameralocator.dialog.rememberLoadingDialog
+import com.findhiddencamera.spycameralocator.model.SubModel
 import com.findhiddencamera.spycameralocator.model.WifiDevice
 import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.ui.camera.CameraScannerActivity
 import com.findhiddencamera.spycameralocator.ui.magnetic.MagneticFieldActivity
+import com.findhiddencamera.spycameralocator.ui.result.view.WifiRiskLampView
+import com.findhiddencamera.spycameralocator.ui.subscribe.viewmodel.SubscribeViewModel
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
+import com.findhiddencamera.spycameralocator.utils.findActivity
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
@@ -47,23 +62,63 @@ import dev.chrisbanes.haze.hazeChild
 @Composable
 fun WifiDetectDetailPage(device: WifiDevice?) {
     val context = LocalContext.current
+    val isSubscribed by SubscribeHelper.isSubscribedFlow.collectAsState()
     val lockedCountHazeState = remember { HazeState() }
+    val dialog = rememberLoadingDialog()
+    val subscribeViewModel = context.findBaseActivityVBind()?.let { viewModel<SubscribeViewModel>(it) }
+    var monthlyProduct by remember { mutableStateOf<SubModel?>(null) }
+    val lockedHazeStyle = remember {
+        HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp)
+    }
+
+    /**
+     * 未订阅详情页点击模糊区域时直接购买月套餐。
+     */
+    fun buyMonthlyProduct() {
+        val activity = context.findActivity() as? FragmentActivity
+        if (monthlyProduct != null && activity != null) {
+            dialog.value = true
+            subscribeViewModel?.buySubscribe(monthlyProduct, activity, dialog)
+        } else {
+            dialog.value = false
+            Toast.makeText(context, "no product", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val queryResult = subscribeViewModel?.querySubProduct(context)
+        monthlyProduct = queryResult
+            ?.firstOrNull { it.id == SubHelper.getMonthPlanId() }
+            ?: queryResult?.firstOrNull()
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
         Image(painter = painterResource(R.mipmap.img_history_record_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                Column(modifier = Modifier.statusBarsPadding().padding(horizontal = 15.dp).fillMaxSize().haze(lockedCountHazeState), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp)) {
-                        Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
-                            context.findBaseActivityVBind()?.finish()
-                        })
-                        Text("Details", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                Column(
+                    modifier = if (isSubscribed) {
+                        Modifier.statusBarsPadding().padding(horizontal = 15.dp).fillMaxSize()
+                    } else {
+                        // 保持原先整块上半区参与 haze 的尺寸，避免模糊区域被内容区收紧。
+                        Modifier.statusBarsPadding().padding(horizontal = 15.dp).fillMaxSize().haze(lockedCountHazeState)
+                    },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (isSubscribed) {
+                        Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp)) {
+                            Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
+                                context.findBaseActivityVBind()?.finish()
+                            })
+                            Text("Details", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                        }
+                    } else {
+                        // 未订阅时底层 Tab 不参与 haze 采样，避免清晰层下方透出黑色重影。
+                        Spacer(modifier = Modifier.fillMaxWidth().padding(top = 9.dp).height(30.dp))
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                     Box(modifier = Modifier.size(70.dp).background(color = Color(0xFF939DAA).copy(0.08f), shape = RoundedCornerShape(12.dp))) {
                         Image(painter = painterResource(R.drawable.svg_camera), contentDescription = null, modifier = Modifier.align(Alignment.Center))
-                        Image(painter = painterResource(R.drawable.svg_red_light), contentDescription = null, modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp))
                     }
                     Spacer(modifier = Modifier.height(15.dp))
                     Text(device?.name ?: "Unknown", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -105,21 +160,42 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
                     }
                 }
 
-                Box(modifier = Modifier
-                    .padding(bottom = 43.dp)
-                    .fillMaxSize()
-                    .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
-                    .clickable {
+                if (!isSubscribed) {
+                    Box(modifier = Modifier
+                        .padding(bottom = 43.dp)
+                        .fillMaxSize()
+                        .hazeChild(lockedCountHazeState, style = lockedHazeStyle)
+                        .clickable {
+                            buyMonthlyProduct()
+                        },
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                            Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.size(60.dp))
+                            Spacer(modifier = Modifier.height(50.dp))
+                            Box(modifier = Modifier.padding(horizontal = 15.dp).fillMaxWidth().height(60.dp).clip(shape = RoundedCornerShape(10.dp))) {
+                                Image(painter = painterResource(R.mipmap.img_btn_bg), contentScale = ContentScale.FillBounds, contentDescription = null, modifier = Modifier.fillMaxSize())
+                                Text("Camera Details", color = White, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.Center))
+                            }
+                        }
+                    }
+                }
 
-                    },
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.size(60.dp))
-                        Spacer(modifier = Modifier.height(50.dp))
-                        Box(modifier = Modifier.padding(horizontal = 15.dp).fillMaxWidth().height(60.dp).clip(shape = RoundedCornerShape(10.dp))) {
-                            Image(painter = painterResource(R.mipmap.img_btn_bg), contentScale = ContentScale.FillBounds, contentDescription = null, modifier = Modifier.fillMaxSize())
-                            Text("Camera Details", color = White, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.Center))
+                Column(modifier = Modifier.statusBarsPadding().padding(horizontal = 15.dp).fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    // 顶部栏和角标作为清晰层最后绘制，避免被 hazeChild 覆盖。
+                    Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp)) {
+                        Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
+                            context.findBaseActivityVBind()?.finish()
+                        })
+                        Text("Details", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Box(modifier = Modifier.size(70.dp)) {
+                        device?.let {
+                            WifiRiskLampView(
+                                info = it,
+                                modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp).size(24.dp)
+                            )
                         }
                     }
                 }
