@@ -22,8 +22,10 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -37,69 +39,95 @@ import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.ui.camera.CameraScannerActivity
 import com.findhiddencamera.spycameralocator.ui.magnetic.MagneticFieldActivity
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 
 @Composable
 fun WifiDetectDetailPage(device: WifiDevice?) {
     val context = LocalContext.current
+    val lockedCountHazeState = remember { HazeState() }
 
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
         Image(painter = painterResource(R.mipmap.img_history_record_bg), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth())
-        Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 15.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp)) {
-                Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
-                    context.findBaseActivityVBind()?.finish()
-                })
-                Text("Details", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
-            }
+        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                Column(modifier = Modifier.statusBarsPadding().padding(horizontal = 15.dp).fillMaxSize().haze(lockedCountHazeState), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp)) {
+                        Image(painter = painterResource(R.drawable.svg_back), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart).clickable{
+                            context.findBaseActivityVBind()?.finish()
+                        })
+                        Text("Details", color = Color(0xFF152946), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Box(modifier = Modifier.size(70.dp).background(color = Color(0xFF939DAA).copy(0.08f), shape = RoundedCornerShape(12.dp))) {
+                        Image(painter = painterResource(R.drawable.svg_camera), contentDescription = null, modifier = Modifier.align(Alignment.Center))
+                        Image(painter = painterResource(R.drawable.svg_red_light), contentDescription = null, modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp))
+                    }
+                    Spacer(modifier = Modifier.height(15.dp))
+                    Text(device?.name ?: "Unknown", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(40.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardColors(contentColor = White, containerColor = White, disabledContainerColor = White, disabledContentColor = White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                        border = BorderStroke(
+                            width = 1.dp,  // 边框宽度
+                            color = Color(0xFF5874FF).copy(0.08f)  // 边框颜色
+                        )
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 21.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Image(painter = painterResource(R.drawable.svg_network_state), contentDescription = null)
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text("Online now", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(if (device?.connected == true) "Yes" else "No", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.height(25.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Image(painter = painterResource(R.drawable.svg_question), contentDescription = null)
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text("Type", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(device?.type ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.height(25.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Image(painter = painterResource(R.drawable.svg_position), contentDescription = null)
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text("IP", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(device?.ip ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(32.dp))
-            Box(modifier = Modifier.size(70.dp).background(color = Color(0xFF939DAA).copy(0.08f), shape = RoundedCornerShape(12.dp))) {
-                Image(painter = painterResource(R.drawable.svg_camera), contentDescription = null, modifier = Modifier.align(Alignment.Center))
-                Image(painter = painterResource(R.drawable.svg_red_light), contentDescription = null, modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp))
-            }
-            Spacer(modifier = Modifier.height(15.dp))
-            Text(device?.name ?: "Unknown", color = Color(0xFF152946), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(40.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardColors(contentColor = White, containerColor = White, disabledContainerColor = White, disabledContentColor = White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                border = BorderStroke(
-                    width = 1.dp,  // 边框宽度
-                    color = Color(0xFF5874FF).copy(0.08f)  // 边框颜色
-                )
-            ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 21.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Image(painter = painterResource(R.drawable.svg_network_state), contentDescription = null)
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text("Online now", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(if (device?.connected == true) "Yes" else "No", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.height(25.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Image(painter = painterResource(R.drawable.svg_question), contentDescription = null)
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text("Type", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(device?.type ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.height(25.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Image(painter = painterResource(R.drawable.svg_position), contentDescription = null)
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text("IP", color = Color(0xFF152946), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(device?.ip ?: "Unknown", color = Color(0xFF939DAA), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Box(modifier = Modifier
+                    .padding(bottom = 43.dp)
+                    .fillMaxSize()
+                    .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
+                    .clickable {
+
+                    },
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.size(60.dp))
+                        Spacer(modifier = Modifier.height(50.dp))
+                        Box(modifier = Modifier.padding(horizontal = 15.dp).fillMaxWidth().height(60.dp).clip(shape = RoundedCornerShape(10.dp))) {
+                            Image(painter = painterResource(R.mipmap.img_btn_bg), contentScale = ContentScale.FillBounds, contentDescription = null, modifier = Modifier.fillMaxSize())
+                            Text("Camera Details", color = White, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.Center))
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-            Text("Suspected hidden camera. Locate it immediately.", color = Color(0xFF44546B), fontSize = 14.sp, fontWeight = FontWeight.W700, modifier = Modifier.fillMaxWidth())
+            Text("Suspected hidden camera. Locate it immediately.", color = Color(0xFF44546B), fontSize = 14.sp, fontWeight = FontWeight.W700, modifier = Modifier.padding(horizontal = 15.dp).fillMaxWidth())
             Spacer(modifier = Modifier.height(15.dp))
-            Box(modifier = Modifier.clickable{ MagneticFieldActivity.launch(context) }.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
+            Box(modifier = Modifier.padding(horizontal = 15.dp).clickable{ MagneticFieldActivity.launch(context) }.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
                 Column(modifier = Modifier.fillMaxSize().padding(15.dp)) {
                     Text("Find out the operating range of equipment by magnetic field signal", color = White, fontSize = 12.sp, fontWeight = FontWeight.W500, lineHeight = 12.sp, modifier = Modifier.fillMaxWidth().padding(end = 125.dp))
                     Spacer(modifier = Modifier.weight(1f))
@@ -109,7 +137,7 @@ fun WifiDetectDetailPage(device: WifiDevice?) {
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Box(modifier = Modifier.clickable{ CameraScannerActivity.launch(context) }.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
+            Box(modifier = Modifier.padding(horizontal = 15.dp).clickable{ CameraScannerActivity.launch(context) }.fillMaxWidth().height(114.dp).background(color = Color(0xFF8095FF), shape = RoundedCornerShape(10.dp))) {
                 Column(modifier = Modifier.fillMaxSize().padding(15.dp)) {
                     Text("Find the flickering pinhole camera through the infrared camera.", color = White, fontSize = 12.sp, fontWeight = FontWeight.W500, lineHeight = 12.sp, modifier = Modifier.fillMaxWidth().padding(end = 125.dp))
                     Spacer(modifier = Modifier.weight(1f))
