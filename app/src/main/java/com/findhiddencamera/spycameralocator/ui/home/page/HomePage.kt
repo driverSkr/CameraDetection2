@@ -242,7 +242,8 @@ fun HomePage() {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Image(painter = painterResource(R.drawable.svg_settings), contentDescription = null, modifier = Modifier.clickable {
-                    SettingActivity.launch(context)
+//                    SettingActivity.launch(context)
+                    DialogHelper.guideCheckDialog(context as FragmentActivity)
                 })
             }
 

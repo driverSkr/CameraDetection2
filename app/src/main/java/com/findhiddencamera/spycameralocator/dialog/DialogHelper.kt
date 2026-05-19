@@ -1,6 +1,7 @@
 package com.findhiddencamera.spycameralocator.dialog
 
 import androidx.fragment.app.FragmentActivity
+import com.findhiddencamera.spycameralocator.dialog.view.GuideCheckView
 import com.findhiddencamera.spycameralocator.dialog.view.RequestBluetoothPermissionView
 import com.findhiddencamera.spycameralocator.dialog.view.RequestWifiPermissionView
 import com.findhiddencamera.spycameralocator.theme.ComposeProjectTheme
@@ -26,6 +27,18 @@ object DialogHelper {
             setContent {
                 ComposeProjectTheme {
                     RequestBluetoothPermissionView(dialog, onAllow)
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    fun guideCheckDialog(activity: FragmentActivity, onStart: () -> Unit = {}) {
+        val (binding, dialog) = ComposeNativeDialog.composeBaseDialog(activity)
+        binding.composeView.apply {
+            setContent {
+                ComposeProjectTheme {
+                    GuideCheckView(dialog, onStart)
                 }
             }
         }
