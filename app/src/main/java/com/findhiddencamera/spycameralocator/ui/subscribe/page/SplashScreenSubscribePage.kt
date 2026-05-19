@@ -64,7 +64,9 @@ import kotlinx.coroutines.withContext
  * 开屏订阅页
  */
 @Composable
-fun SplashScreenSubscribePage() {
+fun SplashScreenSubscribePage(
+    onClose: () -> Unit = {}
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val dialog = rememberLoadingDialog()
@@ -94,7 +96,7 @@ fun SplashScreenSubscribePage() {
     // 监听 订阅状态
     LaunchedEffect(subscribeViewModel?.isBuySuccess?.value) {
         if (subscribeViewModel?.isBuySuccess?.value == 1) {
-            context.findBaseActivityVBind()?.finish()
+            onClose()
         }
     }
 
@@ -112,7 +114,7 @@ fun SplashScreenSubscribePage() {
         Row(modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(top = 4.dp, start = 20.dp, end = 15.dp)) {
             Image(
                 painter = painterResource(R.drawable.svg_icon_close_30),
-                modifier = Modifier.clickable{ context.findBaseActivityVBind()?.finish() },
+                modifier = Modifier.clickable { onClose() },
                 contentDescription = null
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -128,7 +130,7 @@ fun SplashScreenSubscribePage() {
                         dialog.value = false
                         if (isSubscribed) {
                             "Welcome back, dear VIP".showToast(context, ToastType.SUCCESS)
-                            context.findBaseActivityVBind()?.finish()
+                            onClose()
                         } else {
                             "No valid subscriptions found.".showToast(context, ToastType.HINT)
                             if (selectedSubProduct != null && activity != null) {

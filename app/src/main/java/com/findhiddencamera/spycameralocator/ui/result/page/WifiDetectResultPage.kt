@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +46,9 @@ import com.findhiddencamera.spycameralocator.ui.result.WifiDetectDetailActivity
 import com.findhiddencamera.spycameralocator.ui.result.view.WifiInfoItemView
 import com.findhiddencamera.spycameralocator.ui.result.view.WifiRiskLampView
 import com.findhiddencamera.spycameralocator.ui.result.view.WifiSignalBlocksView
-import com.findhiddencamera.spycameralocator.ui.subscribe.SubscribeActivity
+import com.findhiddencamera.spycameralocator.ui.subscribe.SplashScreenSubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.WiFiCamerasActivity
+import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
@@ -54,6 +57,8 @@ import dev.chrisbanes.haze.hazeChild
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.max
+import kotlin.random.Random
 
 @Composable
 fun WifiDetectResultPage(
@@ -63,6 +68,7 @@ fun WifiDetectResultPage(
 ) {
     val lockedCountHazeState = remember { HazeState() }
     val context = LocalContext.current
+    val isSubscribed by SubscribeHelper.isSubscribedFlow.collectAsState()
     val wifiName = remember { getCurrentWifiName(context) }
     val scanTimeText = remember(scanTimeSeconds) { formatScanTime(scanTimeSeconds) }
     val devices = remember(suspiciousDevices, trustedDevices) {
@@ -73,13 +79,24 @@ fun WifiDetectResultPage(
     val wifiTrafficDevices = remember(devices) { devices.filterNot { it.isCameraDevice() } }
     val totalCount = devices.size
     val cameraCount = cameraDevices.size
-    val hasCamera = cameraCount > 0
+    val displayCameraCount = remember(cameraCount) {
+        if (cameraCount > 0) cameraCount else Random.nextInt(from = 1, until = 6)
+    }
+    val displayTotalCount = if (isSubscribed) {
+        totalCount
+    } else {
+        max(totalCount, displayCameraCount)
+    }
+    val hasCamera = if (isSubscribed) cameraCount > 0 else displayCameraCount > 0
     val summaryColor = Color(0xFFF53863)
     val scanInfoText = remember(wifiName, scanTimeText) {
         "WiFi Name:$wifiName $scanTimeText"
     }
     val lockedHazeStyle = remember {
         HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp)
+    }
+    val lockedCameraDevices = remember {
+        buildLockedCameraDevices()
     }
 
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
@@ -122,10 +139,17 @@ fun WifiDetectResultPage(
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Box(modifier = Modifier.height(64.dp).width(194.dp).align(Alignment.CenterHorizontally)) {
-                            Box(modifier = Modifier.fillMaxSize().haze(lockedCountHazeState), contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = if (isSubscribed) Modifier.fillMaxSize() else Modifier.fillMaxSize().haze(lockedCountHazeState),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(
-                                        text = if (hasCamera) "$cameraCount" else "$totalCount",
+                                        text = if (hasCamera) {
+                                            "${if (isSubscribed) cameraCount else displayCameraCount}"
+                                        } else {
+                                            "$displayTotalCount"
+                                        },
                                         color = summaryColor,
                                         fontSize = 40.sp,
                                         fontWeight = FontWeight.Bold,
@@ -133,7 +157,7 @@ fun WifiDetectResultPage(
                                     )
                                     if (hasCamera) {
                                         Text(
-                                            text = "/$totalCount",
+                                            text = "/$displayTotalCount",
                                             color = summaryColor,
                                             fontSize = 23.sp,
                                             fontWeight = FontWeight.W600,
@@ -143,16 +167,20 @@ fun WifiDetectResultPage(
                                 }
                             }
 
-                            // 未订阅用户使用高斯模糊遮住关键数据
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .border(width = 1.dp, color = Color(0xFF5874FF).copy(alpha = 0.08f), shape = RoundedCornerShape(10.dp))
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .hazeChild(lockedCountHazeState, style = lockedHazeStyle)
-                                    .clickable {  }
-                            ) {
-                                Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.align(Alignment.Center).size(32.dp))
+                            if (!isSubscribed) {
+                                // 未订阅用户使用高斯模糊遮住关键数据，点击后进入开屏订阅页。
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(width = 1.dp, color = Color(0xFF5874FF).copy(alpha = 0.08f), shape = RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .hazeChild(lockedCountHazeState, style = lockedHazeStyle)
+                                        .clickable {
+                                            openLockedWifiDetail(context, lockedCameraDevices.first())
+                                        }
+                                ) {
+                                    Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.align(Alignment.Center).size(32.dp))
+                                }
                             }
                         }
 
@@ -176,7 +204,23 @@ fun WifiDetectResultPage(
                     }
                 }
 
-                if (devices.isEmpty()) {
+                if (!isSubscribed) {
+                    item {
+                        ResultSectionHeader(title = "Cameras")
+                    }
+                    items(
+                        count = lockedCameraDevices.size,
+                        key = { index -> lockedCameraDevices[index].stableListKey() }
+                    ) { index ->
+                        val device = lockedCameraDevices[index]
+                        LockedWifiInfoItemView(
+                            device = device,
+                            lockedHazeStyle = lockedHazeStyle
+                        ) {
+                            openLockedWifiDetail(context, device)
+                        }
+                    }
+                } else if (devices.isEmpty()) {
                     item {
                         Text(
                             "No devices found",
@@ -190,12 +234,12 @@ fun WifiDetectResultPage(
                         item {
                             ResultSectionHeader(title = "Cameras")
                         }
-                        items(cameraDevices.size) { index ->
+                        items(
+                            count = cameraDevices.size,
+                            key = { index -> cameraDevices[index].stableListKey() }
+                        ) { index ->
                             val device = cameraDevices[index]
-                            LockedWifiInfoItemView(
-                                device = device,
-                                lockedHazeStyle = lockedHazeStyle
-                            ) {
+                            WifiInfoItemView(modifier = Modifier.fillMaxWidth().height(56.dp), info = device) {
                                 WifiDetectDetailActivity.launch(context, device)
                             }
                         }
@@ -204,16 +248,15 @@ fun WifiDetectResultPage(
                     item {
                         ResultSectionHeader(
                             title = "Devices transmitting traffic via WiFi",
-                            showUnlock = true,
-                            onUnlockClick = { SubscribeActivity.launch(context) }
+                            showUnlock = false
                         )
                     }
-                    items(wifiTrafficDevices.size) { index ->
+                    items(
+                        count = wifiTrafficDevices.size,
+                        key = { index -> wifiTrafficDevices[index].stableListKey() }
+                    ) { index ->
                         val device = wifiTrafficDevices[index]
-                        LockedWifiInfoItemView(
-                            device = device,
-                            lockedHazeStyle = lockedHazeStyle
-                        ) {
+                        WifiInfoItemView(modifier = Modifier.fillMaxWidth().height(56.dp), info = device) {
                             WifiDetectDetailActivity.launch(context, device)
                         }
                     }
@@ -229,7 +272,7 @@ private fun LockedWifiInfoItemView(
     lockedHazeStyle: HazeStyle,
     onClick: () -> Unit
 ) {
-    // 每个锁定卡片单独持有 HazeState，避免 LazyColumn 首屏复用时把其他区域的缓存采样到顶部数字模糊层。
+    // 每个锁定卡片单独持有 HazeState，保留独立采样，避免不同 item 之间的模糊缓存互相影响。
     val itemHazeState = remember(device.ip, device.mac, device.name) { HazeState() }
 
     Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
@@ -245,6 +288,7 @@ private fun LockedWifiInfoItemView(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(8.dp))
+                .clickable { onClick.invoke() }
                 .hazeChild(itemHazeState, style = lockedHazeStyle)
         )
         // 风险角标和右侧信号格作为清晰层单独绘制，不参与底层 haze 采样。
@@ -254,7 +298,7 @@ private fun LockedWifiInfoItemView(
         )
         WifiSignalBlocksView(
             info = device,
-            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp)
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp).clickable { onClick.invoke() }
         )
     }
 }
@@ -326,6 +370,30 @@ private fun buildResultDevices(
                 .thenBy { it.riskSortOrder() }
                 .thenBy { it.ip }
         )
+}
+
+private fun buildLockedCameraDevices(): List<WifiDevice> {
+    // 未订阅默认展示 3 个高风险 Camera，占位内容会被 haze 遮住，订阅后切换为真实扫描结果。
+    return List(3) { index ->
+        WifiDevice(
+            name = "Hidden Camera ${index + 1}",
+            type = "Camera",
+            ip = "192.168.1.${index + 10}",
+            mac = "00:00:00:00:00:0$index",
+            ping = 50L,
+            riskLevel = 1
+        )
+    }
+}
+
+private fun openLockedWifiDetail(context: Context, device: WifiDevice) {
+    // 未订阅锁定态先打开开屏订阅页，只有该入口关闭订阅页后才进入对应设备详情。
+    SplashScreenSubscribeActivity.launchForDeviceDetailAfterClose(context, device)
+}
+
+private fun WifiDevice.stableListKey(): String {
+    // LazyColumn 使用稳定 key，降低列表复用时 haze 缓存和设备数据错位的概率。
+    return ip.ifBlank { mac.ifBlank { name } }
 }
 
 private fun WifiDevice.isCameraDevice(): Boolean {
