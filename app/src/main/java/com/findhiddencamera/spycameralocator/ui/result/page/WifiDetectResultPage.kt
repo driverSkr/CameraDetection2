@@ -42,6 +42,8 @@ import com.findhiddencamera.spycameralocator.model.WifiDevice
 import com.findhiddencamera.spycameralocator.theme.White
 import com.findhiddencamera.spycameralocator.ui.result.WifiDetectDetailActivity
 import com.findhiddencamera.spycameralocator.ui.result.view.WifiInfoItemView
+import com.findhiddencamera.spycameralocator.ui.result.view.WifiRiskLampView
+import com.findhiddencamera.spycameralocator.ui.result.view.WifiSignalBlocksView
 import com.findhiddencamera.spycameralocator.ui.subscribe.SubscribeActivity
 import com.findhiddencamera.spycameralocator.ui.wifi.WiFiCamerasActivity
 import com.findhiddencamera.spycameralocator.utils.findBaseActivityVBind
@@ -231,7 +233,12 @@ private fun LockedWifiInfoItemView(
     val itemHazeState = remember(device.ip, device.mac, device.name) { HazeState() }
 
     Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
-        WifiInfoItemView(modifier = Modifier.haze(itemHazeState), device) {
+        WifiInfoItemView(
+            modifier = Modifier.haze(itemHazeState),
+            info = device,
+            showRiskLamp = false,
+            showSignalBlocks = false
+        ) {
             onClick.invoke()
         }
         Box(
@@ -239,6 +246,15 @@ private fun LockedWifiInfoItemView(
                 .fillMaxSize()
                 .clip(RoundedCornerShape(8.dp))
                 .hazeChild(itemHazeState, style = lockedHazeStyle)
+        )
+        // 风险角标和右侧信号格作为清晰层单独绘制，不参与底层 haze 采样。
+        WifiRiskLampView(
+            info = device,
+            modifier = Modifier.align(Alignment.TopStart).padding(start = 37.dp, top = 5.dp)
+        )
+        WifiSignalBlocksView(
+            info = device,
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp)
         )
     }
 }
