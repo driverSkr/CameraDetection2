@@ -76,6 +76,9 @@ fun WifiDetectResultPage(
     val scanInfoText = remember(wifiName, scanTimeText) {
         "WiFi Name:$wifiName $scanTimeText"
     }
+    val lockedHazeStyle = remember {
+        HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp)
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(color = White)) {
         Image(
@@ -144,7 +147,7 @@ fun WifiDetectResultPage(
                                     .fillMaxSize()
                                     .border(width = 1.dp, color = Color(0xFF5874FF).copy(alpha = 0.08f), shape = RoundedCornerShape(10.dp))
                                     .clip(RoundedCornerShape(10.dp))
-                                    .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
+                                    .hazeChild(lockedCountHazeState, style = lockedHazeStyle)
                                     .clickable {  }
                             ) {
                                 Image(painter = painterResource(R.mipmap.img_lock), contentDescription = null, modifier = Modifier.align(Alignment.Center).size(32.dp))
@@ -187,16 +190,11 @@ fun WifiDetectResultPage(
                         }
                         items(cameraDevices.size) { index ->
                             val device = cameraDevices[index]
-                            Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
-                                WifiInfoItemView(modifier = Modifier.haze(lockedCountHazeState),device) {
-                                    WifiDetectDetailActivity.launch(context, device)
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
-                                )
+                            LockedWifiInfoItemView(
+                                device = device,
+                                lockedHazeStyle = lockedHazeStyle
+                            ) {
+                                WifiDetectDetailActivity.launch(context, device)
                             }
                         }
                     }
@@ -210,20 +208,38 @@ fun WifiDetectResultPage(
                     }
                     items(wifiTrafficDevices.size) { index ->
                         val device = wifiTrafficDevices[index]
-                        Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
-                            WifiInfoItemView(modifier = Modifier.haze(lockedCountHazeState),device) {
-                                WifiDetectDetailActivity.launch(context, device)
-                            }
-                            Box(modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(8.dp))
-                                .hazeChild(lockedCountHazeState, style = HazeStyle(backgroundColor = White, tint = null, blurRadius = 12.dp))
-                            )
+                        LockedWifiInfoItemView(
+                            device = device,
+                            lockedHazeStyle = lockedHazeStyle
+                        ) {
+                            WifiDetectDetailActivity.launch(context, device)
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LockedWifiInfoItemView(
+    device: WifiDevice,
+    lockedHazeStyle: HazeStyle,
+    onClick: () -> Unit
+) {
+    // 每个锁定卡片单独持有 HazeState，避免 LazyColumn 首屏复用时把其他区域的缓存采样到顶部数字模糊层。
+    val itemHazeState = remember(device.ip, device.mac, device.name) { HazeState() }
+
+    Box(modifier = Modifier.fillMaxWidth().height(56.dp)) {
+        WifiInfoItemView(modifier = Modifier.haze(itemHazeState), device) {
+            onClick.invoke()
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(8.dp))
+                .hazeChild(itemHazeState, style = lockedHazeStyle)
+        )
     }
 }
 
