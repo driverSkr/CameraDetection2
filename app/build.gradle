@@ -70,6 +70,15 @@ android {
             manifestPlaceholders = ['useHttp': false]
             buildConfigField("boolean", "isVideoTest", "false")
         }
+        // TODO 临时测试包配置：测试完成后删除 qaVersion flavor，避免误发改包名版本。
+        qaVersion {
+            dimension "appConfig"
+            applicationIdSuffix ".test"
+            versionNameSuffix "-test"
+            matchingFallbacks = ['devVersion']
+            manifestPlaceholders = ['useHttp': true]
+            buildConfigField("boolean", "isVideoTest", "false")
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
