@@ -217,20 +217,29 @@ object ClientController {
         return ""
     }
 
+    // todo 此处被修改，标记
     fun querySubProductOfferToken(details: ProductDetails, planId: String, offerId: String): String {
         val list = details.subscriptionOfferDetails
-        var token = ""
         if (!list.isNullOrEmpty()) {
             list.forEach { offer ->
                 if (offer.basePlanId == planId) {
-                    token = offer.offerToken
-                    if (offerId.isNotEmpty() && offer.offerId == offerId) {
-                        return token
+                    val currentOfferId = offer.offerId.orEmpty()
+                    Log.d(
+                        "ClientController",
+                        "查询订阅offerToken：productId=${details.productId}, planId=$planId, offerId=$currentOfferId"
+                    )
+                    // 购买时必须使用和查询价格一致的套餐/优惠，否则 Google Play 可能提示找不到商品。
+                    if (offerId.isBlank() && currentOfferId.isBlank()) {
+                        return offer.offerToken
+                    }
+                    if (offerId.isNotBlank() && currentOfferId == offerId) {
+                        return offer.offerToken
                     }
                 }
             }
         }
-        return token
+        Log.e("ClientController", "未找到匹配的订阅offerToken：productId=${details.productId}, planId=$planId, offerId=$offerId")
+        return ""
     }
 
     fun disconnect() {

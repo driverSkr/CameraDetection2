@@ -26,4 +26,17 @@ object LaunchUtils {
             launchWeb(context, "https://play.google.com/store/apps/details?id=" + context.packageName, context.getString(R.string.app_name))
         }
     }
+
+    fun launchSubscriptionManage(context: Context, productId: String) {
+        val subscriptionUri = Uri.parse("https://play.google.com/store/account/subscriptions?sku=$productId&package=${context.packageName}")
+        try {
+            // 优先拉起 Google Play 订阅管理页，方便用户直接管理当前订阅商品。
+            val intent = Intent(Intent.ACTION_VIEW, subscriptionUri)
+            intent.setPackage("com.android.vending")
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("LaunchUtils", "打开Google Play订阅管理页失败", e)
+            launchWeb(context, subscriptionUri.toString(), context.getString(R.string.app_name))
+        }
+    }
 }

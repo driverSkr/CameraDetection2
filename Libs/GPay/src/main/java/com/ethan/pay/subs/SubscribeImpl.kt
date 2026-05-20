@@ -95,10 +95,15 @@ class SubscribeImpl : GPayImpl {
             payCallback?.onDisconnect()
             return
         }
-        val productDetails = ClientController.queryProductDetails(goods.productId, BillingClient.ProductType.SUBS) ?: return
+        Log.d("SubscribeImpl", "拉起订阅购买：productId=${goods.productId}, planId=${goods.planId}, offerId=${goods.offerId}")
+        val productDetails = ClientController.queryProductDetails(goods.productId, BillingClient.ProductType.SUBS)
+        if (productDetails == null) {
+            callback.onFailed("productDetails empty: ${goods.productId}")
+            return
+        }
         val selectedOfferToken = ClientController.querySubProductOfferToken(productDetails, goods.planId, goods.offerId)
         if (selectedOfferToken.isEmpty()) {
-            callback.onFailed("offerToken empty")
+            callback.onFailed("offerToken empty: productId=${goods.productId}, planId=${goods.planId}, offerId=${goods.offerId}")
             return
         }
         val productDetailsParamsList = listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails)

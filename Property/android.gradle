@@ -8,7 +8,8 @@ def library() {
         defaultConfig setupDefaultConfig("")
         buildTypes {
             release {
-                minifyEnabled true
+                // 库模块不能单独开启混淆，否则 app 的 release lint 和运行时可能找不到对外暴露的基类。
+                minifyEnabled false
                 consumerProguardFiles 'proguard-rules.pro'
             }
         }

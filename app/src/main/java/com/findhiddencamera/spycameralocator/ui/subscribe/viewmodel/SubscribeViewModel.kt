@@ -122,7 +122,7 @@ class SubscribeViewModel: ViewModel() {
             withContext(Dispatchers.Main) {
                 dialog.value = false
             }
-            println("ethan: $goods")
+            Log.d("subscribe", "购买订阅参数：productId=${goods.productId}, planId=${goods.planId}, offerId=${goods.offerId}, skuId=${goods.skuId}")
             BillFactory.getSubscribe().launchBilling(activity, goods, object : OnPayResultCallback {
                 override fun begin() {
                     Log.d("subscribe", "InApp Billing 购买订阅开始")
