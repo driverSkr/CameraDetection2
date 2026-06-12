@@ -110,7 +110,13 @@ class SubscribeImpl : GPayImpl {
             .setOfferToken(selectedOfferToken).build())
         val billingFlowParams = BillingFlowParams.newBuilder().setProductDetailsParamsList(productDetailsParamsList).build()
         withContext(Dispatchers.Main) {
-            val responseCode = ClientController.client?.launchBillingFlow(activity, billingFlowParams)?.responseCode
+            val billingResult = ClientController.client?.launchBillingFlow(activity, billingFlowParams)
+            val responseCode = billingResult?.responseCode
+            Log.d(
+                "SubscribeImpl",
+                "launchBillingFlow结果：code=$responseCode, msg=${billingResult?.debugMessage}, " +
+                        "productId=${goods.productId}, planId=${goods.planId}, offerId=${goods.offerId}"
+            )
             if (responseCode != BillingClient.BillingResponseCode.OK) {
                 payCallback?.onFailed("code $responseCode")
             }

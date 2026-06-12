@@ -27,6 +27,7 @@ import com.findhiddencamera.spycameralocator.utils.SubscribeHelper
 
 @Composable
 fun SubProductView(modifier: Modifier = Modifier, isSelected: Boolean, model: SubModel, onClick: () -> Unit) {
+    val hasOffer = !model.offerId.isNullOrBlank()
 
     Box(modifier = modifier
         .height(156.dp)
@@ -36,8 +37,10 @@ fun SubProductView(modifier: Modifier = Modifier, isSelected: Boolean, model: Su
         )
         .clickable{ onClick.invoke() }
     ) {
-        // todo 折扣需要再计算
-        Text("41% OFF", color = White50, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp))
+        if (hasOffer) {
+            // 只有Google Play实际返回优惠offer时才展示优惠标识，避免基础方案被误标。
+            Text("FIRST OFFER", color = White50, fontSize = 16.sp, fontWeight = FontWeight.W500, modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp))
+        }
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

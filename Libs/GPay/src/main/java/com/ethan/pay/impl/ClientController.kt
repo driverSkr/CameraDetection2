@@ -25,9 +25,10 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 import kotlin.coroutines.resume
-import kotlin.math.min
 
 object ClientController {
+
+    private const val TAG = "ClientController"
 
     var client: BillingClient? = null
     private var onPurchaseListener: OnPurchaseListener? = null
@@ -73,6 +74,11 @@ object ClientController {
     }
 
     suspend fun queryProductDetails(goodsId: String, productType: String): ProductDetails? { // 新版本product模式
+        val billingClient = client
+        if (billingClient == null || !billingClient.isReady) {
+            Log.e(TAG, "查询商品失败：BillingClient未连接，productId=$goodsId, type=$productType")
+            return null
+        }
         val productList = mutableListOf<QueryProductDetailsParams.Product>()
         val product = QueryProductDetailsParams.Product.newBuilder()
         product.setProductId(goodsId)
@@ -81,13 +87,29 @@ object ClientController {
         val params = QueryProductDetailsParams.newBuilder()
         params.setProductList(productList)
         val productDetailsResult = withContext(Dispatchers.IO) {
-            client?.queryProductDetails(params.build())
+            billingClient.queryProductDetails(params.build())
         }
-        productDetailsResult?.productDetailsList?.forEach {
-            if (it.productId == goodsId) {
-                return it
+        val billingResult = productDetailsResult.billingResult
+        val detailsList = productDetailsResult.productDetailsList.orEmpty()
+        Log.d(
+            TAG,
+            "查询商品详情结果：productId=$goodsId, type=$productType, code=${billingResult.responseCode}, " +
+                    "msg=${billingResult.debugMessage}, count=${detailsList.size}"
+        )
+        detailsList.forEach { details ->
+            if (productType == BillingClient.ProductType.SUBS) {
+                val offerInfo = details.subscriptionOfferDetails.orEmpty().joinToString { offer ->
+                    "plan=${offer.basePlanId}, offer=${offer.offerId.orEmpty()}, phases=${offer.pricingPhases.pricingPhaseList.size}"
+                }
+                Log.d(TAG, "订阅商品返回：productId=${details.productId}, offers=[$offerInfo]")
+            } else {
+                Log.d(TAG, "普通商品返回：productId=${details.productId}")
+            }
+            if (details.productId == goodsId) {
+                return details
             }
         }
+        Log.e(TAG, "未找到匹配商品：productId=$goodsId, type=$productType, returned=${detailsList.map { it.productId }}")
         return null
     }
 
@@ -150,35 +172,23 @@ object ClientController {
     fun querySubProductPrice(details: ProductDetails, planId: String, offerId: String): String {
         val list = details.subscriptionOfferDetails
         if (!list.isNullOrEmpty()) {
-            list.forEach { offer ->
-                if (offer.basePlanId == planId) {
-                    if (offerId.isNotEmpty()) { // 优惠价
-                        if (offer.offerId == offerId) {
-                            val phaseList = offer.pricingPhases.pricingPhaseList
-                            var micros = if (phaseList.size >= 1) phaseList[0].priceAmountMicros else 0L
-                            phaseList.forEach { phase ->
-                                micros = min(micros, phase.priceAmountMicros) // 取最低价格
-                            }
-                            return DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US)).format(micros.toDouble() / 10000.00 / 100.00)
-                        }
-                    }  // 否则原价
-                    if (offer.offerId.isNullOrEmpty()) {
-                        val phaseList = offer.pricingPhases.pricingPhaseList
-                        var micros = if (phaseList.size >= 1) phaseList[0].priceAmountMicros else 0L
-                        phaseList.forEach { phase ->
-                            micros = min(micros, phase.priceAmountMicros) // 取最低价格
-                            Log.e("TAG", "querySubProductPrice: " + phase.priceAmountMicros)
-                            Log.e("TAG", "querySubProductPrice: " + phase.formattedPrice)
-                            Log.e("TAG", "querySubProductPrice: " + phase.priceCurrencyCode)
-                            Log.e("TAG", "querySubProductPrice: " + phase.billingPeriod)
-                            Log.e("TAG", "querySubProductPrice: " + phase.recurrenceMode)
-                            Log.e("TAG", "querySubProductPrice: " + phase.billingCycleCount)
-                            return DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US)).format(micros.toDouble() / 10000.00 / 100.00)
-                        }
-                    }
-                }
+            val selectedOffer = list.firstOrNull { offer ->
+                offer.basePlanId == planId &&
+                        if (offerId.isNotBlank()) offer.offerId == offerId else offer.offerId.isNullOrEmpty()
+            }
+            if (selectedOffer != null) {
+                val phaseList = selectedOffer.pricingPhases.pricingPhaseList
+                val phase = phaseList.minByOrNull { it.priceAmountMicros }
+                Log.d(
+                    TAG,
+                    "订阅价格命中：productId=${details.productId}, planId=$planId, " +
+                            "offerId=${selectedOffer.offerId.orEmpty()}, price=${phase?.formattedPrice.orEmpty()}"
+                )
+                val micros = phase?.priceAmountMicros ?: 0L
+                return DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US)).format(micros.toDouble() / 10000.00 / 100.00)
             }
         }
+        Log.e(TAG, "未找到订阅价格：productId=${details.productId}, planId=$planId, offerId=$offerId")
         return DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US)).format(0L / 10000.00 / 100.00)
     }
 
@@ -210,14 +220,14 @@ object ClientController {
         if (!list.isNullOrEmpty()) {
             list.forEach { offer ->
                 if (offer.basePlanId == planId) {
-                    return offer.pricingPhases.pricingPhaseList[0].priceCurrencyCode
+                    return offer.pricingPhases.pricingPhaseList.firstOrNull()?.priceCurrencyCode.orEmpty()
                 }
             }
         }
+        Log.e(TAG, "未找到订阅币种：productId=${details.productId}, planId=$planId")
         return ""
     }
 
-    // todo 此处被修改，标记
     fun querySubProductOfferToken(details: ProductDetails, planId: String, offerId: String): String {
         val list = details.subscriptionOfferDetails
         if (!list.isNullOrEmpty()) {
@@ -225,7 +235,7 @@ object ClientController {
                 if (offer.basePlanId == planId) {
                     val currentOfferId = offer.offerId.orEmpty()
                     Log.d(
-                        "ClientController",
+                        TAG,
                         "查询订阅offerToken：productId=${details.productId}, planId=$planId, offerId=$currentOfferId"
                     )
                     // 购买时必须使用和查询价格一致的套餐/优惠，否则 Google Play 可能提示找不到商品。
@@ -238,7 +248,7 @@ object ClientController {
                 }
             }
         }
-        Log.e("ClientController", "未找到匹配的订阅offerToken：productId=${details.productId}, planId=$planId, offerId=$offerId")
+        Log.e(TAG, "未找到匹配的订阅offerToken：productId=${details.productId}, planId=$planId, offerId=$offerId")
         return ""
     }
 
