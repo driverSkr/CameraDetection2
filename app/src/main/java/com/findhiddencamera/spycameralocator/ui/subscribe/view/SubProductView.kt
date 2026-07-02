@@ -53,7 +53,8 @@ fun SubProductView(modifier: Modifier = Modifier, isSelected: Boolean, model: Su
             Spacer(modifier = Modifier.height(12.dp))
             Text(SubscribeHelper.getProductType(model.id), color = White50, fontSize = 14.sp, fontWeight = FontWeight.W400)
             Spacer(modifier = Modifier.weight(1f))
-            Text("${model.currency}${model.price}${SubscribeHelper.getProductType2(model.id)}", color = White, fontSize = 16.sp, fontWeight = FontWeight.W500)
+            Text("${model.currency}${model.price}", color = White, fontSize = 16.sp, fontWeight = FontWeight.W500)
+            Text(SubscribeHelper.getProductType2(model.id), color = White, fontSize = 14.sp, fontWeight = FontWeight.W400)
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 // todo 价格计算

@@ -115,9 +115,9 @@ object SubscribeHelper {
     }
 
     fun getProductType2(planId: String?) = when(planId) {
-        SubHelper.getWeekPlanId() -> "/Week"
-        SubHelper.getMonthPlanId() -> "/Month"
-        SubHelper.getYearPlanId() -> "/Year"
+        SubHelper.getWeekPlanId() -> "per week"
+        SubHelper.getMonthPlanId() -> "per month"
+        SubHelper.getYearPlanId() -> "per year"
         else -> ""
     }
 }
