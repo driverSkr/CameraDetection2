@@ -7,6 +7,7 @@ plugins {
 //    id 'com.google.gms.google-services'
     id 'kotlin-kapt' // 必须添加 kapt 插件
     id 'org.jetbrains.kotlin.plugin.compose'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -145,9 +146,14 @@ dependencies {
     implementation "androidx.camera:camera-camera2:${camerax_version}"
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
     implementation "androidx.camera:camera-view:${camerax_version}"
+    // ProcessCameraProvider 的公开 API 使用 ListenableFuture，需显式提供其实现。
+    implementation "androidx.concurrent:concurrent-futures:1.2.0"
+    // Firebase Analytics 仅在运行时传递 Guava，CameraX 编译期也需要 ListenableFuture。
+    implementation "com.google.guava:guava:31.1-android"
     //=========================================libs=========================================
     implementation project(path: ':Libs:Base')
     implementation project(path: ':Libs:Permission')
     implementation project(path: ':Libs:GPay')
+    implementation project(path: ':Libs:FirebaseAnalytics')
 
 }
