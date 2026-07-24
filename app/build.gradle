@@ -4,7 +4,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-parcelize'
     id 'com.google.devtools.ksp'
-//    id 'com.google.gms.google-services'
+    id 'com.google.gms.google-services'
     id 'kotlin-kapt' // 必须添加 kapt 插件
     id 'org.jetbrains.kotlin.plugin.compose'
     id 'com.google.firebase.crashlytics'
