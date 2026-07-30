@@ -2,7 +2,6 @@ package com.ethan.pay.impl
 
 import android.app.Activity
 import android.content.Context
-import com.android.billingclient.api.PurchaseHistoryRecord
 import com.ethan.pay.model.Goods
 import com.ethan.pay.model.OnPayResultCallback
 import com.ethan.pay.model.OrderInfo
@@ -28,10 +27,6 @@ interface GPayImpl {
     suspend fun queryPurchase(): MutableList<OrderInfo>
 
     suspend fun confirmPlan(context: Context): Boolean
-
-    suspend fun getPurchaseHistory(): MutableList<PurchaseHistoryRecord>
-
-    suspend fun getPurchaseHistory2OrderInfo(): List<OrderInfo>
 
     suspend fun hasDiscount(goods: Goods): Boolean
 }

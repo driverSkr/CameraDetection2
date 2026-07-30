@@ -5,18 +5,13 @@ import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchaseHistoryRecord
 import com.android.billingclient.api.QueryProductDetailsParams
-import com.android.billingclient.api.QueryPurchaseHistoryParams
 import com.android.billingclient.api.QueryPurchasesParams
-import com.android.billingclient.api.SkuDetailsParams
-import com.android.billingclient.api.SkuDetailsResult
 import com.android.billingclient.api.queryProductDetails
-import com.android.billingclient.api.queryPurchaseHistory
 import com.android.billingclient.api.queryPurchasesAsync
-import com.android.billingclient.api.querySkuDetails
 import com.ethan.pay.model.OrderInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -40,9 +35,17 @@ object ClientController {
     suspend fun connect(context: Context): Int {
         return suspendCancellableCoroutine { continuation ->
             if (client == null) {
-                client = BillingClient.newBuilder(context).setListener { result, purchases ->
-                    onPurchaseListener?.onPurchase(result, purchases)
-                }.enablePendingPurchases().build()
+                client = BillingClient.newBuilder(context)
+                    .setListener { result, purchases ->
+                        onPurchaseListener?.onPurchase(result, purchases)
+                    }
+                    .enablePendingPurchases(
+                        PendingPurchasesParams.newBuilder()
+                            .enableOneTimeProducts()
+                            .build()
+                    )
+                    .enableAutoServiceReconnection()
+                    .build()
             }
             client?.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(billingResult: BillingResult) {
@@ -66,11 +69,6 @@ object ClientController {
 
     fun setOnPurchaseListener(listener: OnPurchaseListener) {
         onPurchaseListener = listener
-    }
-
-    fun isSupport(): Boolean {
-        val result = client?.isFeatureSupported(BillingClient.FeatureType.PRODUCT_DETAILS)
-        return result?.responseCode != BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED
     }
 
     suspend fun queryProductDetails(goodsId: String, productType: String): ProductDetails? { // 新版本product模式
@@ -122,48 +120,6 @@ object ClientController {
         purchasesResult?.purchasesList?.forEach {
             if (it.purchaseState == Purchase.PurchaseState.PURCHASED) {
                 list.add(OrderInfo().createOrderInfo(it))
-            }
-        }
-        return list
-    }
-
-    suspend fun queryPurchaseHistory(productType: String): MutableList<PurchaseHistoryRecord> { // 新版本product模式
-        val params = QueryPurchaseHistoryParams.newBuilder().setProductType(productType)
-        val list = mutableListOf<PurchaseHistoryRecord>()
-        val queryPurchaseHistory = client?.queryPurchaseHistory(params.build())
-        queryPurchaseHistory?.purchaseHistoryRecordList?.forEach {
-            list.add(it)
-        }
-        return list
-    }
-
-    suspend fun queryPurchaseSkuHistory(productType: String): MutableList<PurchaseHistoryRecord> { // 老版本sku模式
-        val list = mutableListOf<PurchaseHistoryRecord>()
-        val queryPurchaseHistory = client?.queryPurchaseHistory(productType)
-        queryPurchaseHistory?.purchaseHistoryRecordList.let {
-            it?.let { it1 -> list.addAll(it1) }
-        }
-        return list
-    }
-
-    suspend fun querySkuDetails(goodsId: String, skuType: String): SkuDetailsResult? { // 老版本sku模式
-        val skuList: MutableList<String> = ArrayList()
-        skuList.add(goodsId)
-        val params = SkuDetailsParams.newBuilder()
-        params.setSkusList(skuList).setType(skuType)
-        return client?.querySkuDetails(params.build())
-    }
-
-    suspend fun querySkuPurchase(skuType: String): MutableList<OrderInfo> { // 老版本sku模式
-        val purchaseResult = client?.queryPurchasesAsync(skuType)
-        val result = purchaseResult?.billingResult
-        val purchaseList = purchaseResult?.purchasesList
-        val list = mutableListOf<OrderInfo>()
-        if (result?.responseCode == BillingClient.BillingResponseCode.OK && purchaseList != null) {
-            for (p in purchaseList) {
-                if (p.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                    list.add(OrderInfo().createSkuOrderInfo(p))
-                }
             }
         }
         return list

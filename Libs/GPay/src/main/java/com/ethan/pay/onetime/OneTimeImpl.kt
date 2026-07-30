@@ -93,12 +93,8 @@ class OneTimeImpl : GPayImpl {
             return
         }
 
-        // 查询历史记录，如果有相同的就先消费掉
-        val purchaseHistory = getPurchaseHistory()
-        val products = purchaseHistory.firstOrNull()?.products
-        if (products?.firstOrNull() == goods.productId) {
-            handlePurchase(purchaseHistory.first().purchaseToken)
-        }
+        val ownedPurchase = queryPurchase().firstOrNull { it.goodsId == goods.productId }
+        ownedPurchase?.token?.let { handlePurchase(it) }
 
         val productDetails = ClientController.queryProductDetails(goods.productId, BillingClient.ProductType.INAPP) ?: return
         val productDetailsParamsList = listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).build())
@@ -190,14 +186,6 @@ class OneTimeImpl : GPayImpl {
         }
         val productDetails = ClientController.queryProductDetails(goods.productId, BillingClient.ProductType.INAPP)
         return productDetails?.oneTimePurchaseOfferDetails?.formattedPrice ?: ""
-    }
-
-    override suspend fun getPurchaseHistory(): MutableList<PurchaseHistoryRecord> {
-        return ClientController.queryPurchaseHistory(BillingClient.ProductType.INAPP)
-    }
-
-    override suspend fun getPurchaseHistory2OrderInfo(): List<OrderInfo> {
-        return ClientController.queryPurchaseHistory(BillingClient.ProductType.INAPP).map { OrderInfo().createOrderInfo4His(it) }
     }
 
     override suspend fun hasDiscount(goods: Goods): Boolean {

@@ -19,7 +19,6 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchaseHistoryRecord
 import com.android.billingclient.api.acknowledgePurchase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -180,14 +179,6 @@ class LifeTimeImpl : GPayImpl {
         } else {
             false
         }
-    }
-
-    override suspend fun getPurchaseHistory(): MutableList<PurchaseHistoryRecord> {
-        return ClientController.queryPurchaseHistory(BillingClient.ProductType.INAPP)
-    }
-
-    override suspend fun getPurchaseHistory2OrderInfo(): List<OrderInfo> {
-        return ClientController.queryPurchaseHistory(BillingClient.ProductType.INAPP).map { OrderInfo().createOrderInfo4His(it) }
     }
 
     override suspend fun hasDiscount(goods: Goods): Boolean {

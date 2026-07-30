@@ -5,59 +5,34 @@ import com.ethan.pay.impl.ClientController
 import com.ethan.pay.impl.GPayImpl
 import com.ethan.pay.impl.PurchaseType
 import com.ethan.pay.lifetime.LifeTimeImpl
-import com.ethan.pay.lifetime.LifeTimeSkuImpl
 import com.ethan.pay.model.OrderInfo
 import com.ethan.pay.onetime.OneTimeImpl
-import com.ethan.pay.onetime.OneTimeSkuImpl
 import com.ethan.pay.subs.SubscribeImpl
-import com.ethan.pay.subs.SubscribeSkuImpl
 
 
 object BillFactory {
 
-    private var subProductImpl: GPayImpl? = null
-    private var subSkuImpl: GPayImpl? = null
-    private var lifeProductImpl: GPayImpl? = null
-    private var lifeSkuImpl: GPayImpl? = null
-    private var oneProductImpl: GPayImpl? = null
-    private var oneSkuImpl: GPayImpl? = null
+    private var subscribeImpl: GPayImpl? = null
+    private var lifeTimeImpl: GPayImpl? = null
+    private var oneTimeImpl: GPayImpl? = null
 
     suspend fun init(context: Context): Int {
         return ClientController.connect(context)
     }
 
-    fun isSupport(): Boolean {
-        return ClientController.isSupport()
-    }
-
     fun getSubscribe(): GPayImpl {
-        return if (ClientController.isSupport()) {
-            if (subProductImpl == null) subProductImpl = SubscribeImpl()
-            subProductImpl!!
-        } else {
-            if (subSkuImpl == null) subSkuImpl = SubscribeSkuImpl()
-            subSkuImpl!!
-        }
+        if (subscribeImpl == null) subscribeImpl = SubscribeImpl()
+        return subscribeImpl!!
     }
 
     fun getLifeTime(): GPayImpl {
-        return if (ClientController.isSupport()) {
-            if (lifeProductImpl == null) lifeProductImpl = LifeTimeImpl()
-            lifeProductImpl!!
-        } else {
-            if (lifeSkuImpl == null) lifeSkuImpl = LifeTimeSkuImpl()
-            lifeSkuImpl!!
-        }
+        if (lifeTimeImpl == null) lifeTimeImpl = LifeTimeImpl()
+        return lifeTimeImpl!!
     }
 
     fun getOneTime(): GPayImpl {
-        return if (ClientController.isSupport()) {
-            if (oneProductImpl == null) oneProductImpl = OneTimeImpl()
-            oneProductImpl!!
-        } else {
-            if (oneSkuImpl == null) oneSkuImpl = OneTimeSkuImpl()
-            oneSkuImpl!!
-        }
+        if (oneTimeImpl == null) oneTimeImpl = OneTimeImpl()
+        return oneTimeImpl!!
     }
 
 
