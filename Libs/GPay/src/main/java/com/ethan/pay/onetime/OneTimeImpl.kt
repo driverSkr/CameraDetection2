@@ -94,7 +94,10 @@ class OneTimeImpl : GPayImpl {
         }
 
         val ownedPurchase = queryPurchase().firstOrNull { it.goodsId == goods.productId }
-        ownedPurchase?.token?.let { handlePurchase(it) }
+        if (ownedPurchase != null) {
+            payCallback?.onOwned(mutableListOf(ownedPurchase))
+            return
+        }
 
         val productDetails = ClientController.queryProductDetails(goods.productId, BillingClient.ProductType.INAPP) ?: return
         val productDetailsParamsList = listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetails).build())

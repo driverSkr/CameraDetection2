@@ -2,14 +2,12 @@ package com.findhiddencamera.spycameralocator.utils
 
 import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.core.content.ContextCompat
 import com.findhiddencamera.spycameralocator.R
 import com.findhiddencamera.spycameralocator.model.WifiDevice
 import com.stealthcopter.networktools.PortScan
@@ -22,6 +20,9 @@ object WifiHelper {
 
     fun requiredPermissions(): Array<String> {
         val permissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.NEARBY_WIFI_DEVICES)
         }
@@ -69,13 +70,9 @@ object WifiHelper {
             return
         }
         // 权限检查
-        val needNearby = Build.VERSION.SDK_INT >= 33
-        val hasLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val hasNearby = !needNearby || ContextCompat.checkSelfPermission(context, Manifest.permission.NEARBY_WIFI_DEVICES) == PackageManager.PERMISSION_GRANTED
-        if (!hasNearby || !hasLocation) {
-            val permission = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
-            if (needNearby) permission.add(Manifest.permission.NEARBY_WIFI_DEVICES)
-            wifiPermissionLauncher.launch(permission.toTypedArray())
+        val missingPermissions = AppPermissionHelper.missingPermissions(context, requiredPermissions())
+        if (missingPermissions.isNotEmpty()) {
+            wifiPermissionLauncher.launch(missingPermissions.toTypedArray())
         }
     }
 

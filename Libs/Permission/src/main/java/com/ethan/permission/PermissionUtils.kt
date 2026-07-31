@@ -246,7 +246,11 @@ class PermissionUtils {
             block(true, true)
             return
         }
-        val permissionList = arrayOf(permission)
+        val permissionList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, permission)
+        } else {
+            arrayOf(permission)
+        }
         launcherTow?.launch(permissionList)
     }
 
